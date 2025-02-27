@@ -1,5 +1,45 @@
+# Table of Contents
+
+- [Introduction](#introduction)
+- [Code Style](#code-style)
+    - [QML Object Declarations](#qml-object-declarations)
+    - [Signal Handler Ordering](#signal-handler-ordering)
+    - [Property Initialization Order](#property-initialization-order)
+    - [Function Ordering](#function-ordering)
+    - [Animations](#animations)
+    - [Specifying IDs for Objects](#specifying-ids-for-objects)
+    - [Property Assignments](#property-assignments)
+    - [Import Statements](#import-statements)
+    - [Full Example](#full-example)
+- [Bindings](#bindings)
+    - [Prefer Bindings over Imperative Assignments](#prefer-bindings-over-imperative-assignments)
+    - [Making `Connections`](#making-connections)
+    - [Use `Binding` Object](#use-binding-object)
+    - [KISS It](#kiss-it)
+    - [Avoid Unnecessary Re-Evaluations](#avoid-unnecessary-re-evaluations)
+- [C++ Integration](#c-integration)
+    - [Avoid Context Properties](#avoid-context-properties)
+    - [Use Singleton for Common API Access](#use-singleton-for-common-api-access)
+    - [Prefer Instantiated Types Over Singletons For Data](#prefer-instantiated-types-over-singletons-for-data)
+    - [Watch Out for Object Ownership Rules](#watch-out-for-object-ownership-rules)
+- [Performance and Memory](#performance-and-memory)
+    - [Reduce the Number of Implicit Types](#reduce-the-number-of-implicit-types)
+- [Signal Handling](#signal-handling)
+    - [Try to Avoid Using connect Function in Models](#try-to-avoid-using-connect-function-in-models)
+    - [When to use Functions and Signals](#when-to-use-functions-and-signals)
+- [JavaScript](#javascript)
+    - [Use Arrow Functions](#use-arrow-functions)
+    - [Use the Modern Way of Declaring Variables](#use-the-modern-way-of-declaring-variables)
+- [States and Transitions](#states-and-transitions)
+    - [Don't Define Top Level States](#dont-define-top-level-states)
+- [Visual Items](#visual-items)
+    - [Distinguish Between Different Types of Sizes](#distinguish-between-different-types-of-sizes)
+    - [Be Careful with a Transparent `Rectangle`](#be-careful-with-a-transparent-rectangle)
+
+
 # Introduction
-Based on my experience and on:
+This coding guide based on my experience working on big Qt/QML projects and on 
+the following sources, best practices and recommendations:
 
   - Original [Furkanzmc/QML-Coding-Guide](https://github.com/Furkanzmc/QML-Coding-Guide) content
   - Qt best practices:
@@ -12,73 +52,43 @@ Based on my experience and on:
 
 This write-up summarizes best practices towards good user experience, UI look-and-feel, scalability, performance, much fewer errors, extendability and maintenance. They are to be applied early in the development cycle in order to avoid technical debt and _costly_ refactoring later.
 
-# Table of Contents
-
-- [Code Style](#code-style)
-    - [CS-1: Signal Handler Ordering](#cs-1-signal-handler-ordering)
-    - [CS-2: Property Initialization Order](#cs-2-property-initialization-order)
-    - [CS-3: Function Ordering](#cs-3-function-ordering)
-    - [CS-4: Animations](#cs-4-animations)
-    - [CS-5: Specifying IDs for Objects](#cs-5-specifying-ids-for-objects)
-    - [CS-6: Property Assignments](#cs-6-property-assignments)
-    - [CS-7: Import Statements](#cs-7-import-statements)
-    - [Full Example](#full-example)
-- [Bindings](#bindings)
-    - [B-1: Prefer Bindings over Imperative Assignments](#b-1-prefer-bindings-over-imperative-assignments)
-    - [B-2: Making `Connections`](#b-2-making-connections)
-    - [B-3: Use `Binding` Object](#b-3-use-binding-object)
-    - [B-4: KISS It](#b-4-kiss-it)
-    - [B-5: Be Lazy](#b-5-be-lazy)
-    - [B-6: Avoid Unnecessary Re-Evaluations](#b-6-avoid-unnecessary-re-evaluations)
-- [C++ Integration](#c-integration)
-    - [CI-1: Avoid Context Properties](#ci-1-avoid-context-properties)
-    - [CI-2: Use Singleton for Common API Access](#ci-2-use-singleton-for-common-api-access)
-    - [CI-3: Prefer Instantiated Types Over Singletons For Data](#ci-3-prefer-instantiated-types-over-singletons-for-data)
-    - [CI-4: Watch Out for Object Ownership Rules](#ci-4-watch-out-for-object-ownership-rules)
-- [Performance and Memory](#performance-and-memory)
-    - [PM-1: Reduce the Number of Implicit Types](#pm-1-reduce-the-number-of-implicit-types)
-- [Signal Handling](#signal-handling)
-    - [SH-1: Try to Avoid Using connect Function in Models](#sh-1-try-to-avoid-using-connect-function-in-models)
-    - [SH-2: When to use Functions and Signals](#sh-2-when-to-use-functions-and-signals)
-- [JavaScript](#javascript)
-    - [JS-1: Use Arrow Functions](#js-1-use-arrow-functions)
-    - [JS-2: Use the Modern Way of Declaring Variables](#js-2-use-the-modern-way-of-declaring-variables)
-- [States and Transitions](#states-and-transitions)
-    - [ST-1: Don't Define Top Level States](#st-1-dont-define-top-level-states)
-- [Visual Items](#visual-items)
-    - [VI-1: Distinguish Between Different Types of Sizes](#vi-1-distinguish-between-different-types-of-sizes)
-    - [VI-2: Be Careful with a Transparent `Rectangle`](#vi-2-be-careful-with-a-transparent-rectangle)
-
-
 # Code Style
 
+## QML Object Declarations
 This section provides details about how to format the order of properties, signals,
 and functions to make things easy on the eyes and quickly switch to related code block.
 
-[QML object attributes](https://doc.qt.io/qt-6/qtqml-syntax-objectattributes.html)
-are always structured in the following order:
+Though in Qt documentation and examples, [QML object attributes](https://doc.qt.io/qt-6/qtqml-syntax-objectattributes.html) are always structured in the [following order](https://doc.qt.io/qt-6/qml-codingconventions.html#qml-object-declarations) I found it inconsistent as `id` is also a property and we got a gap in declaration: as all object properties initialization should go in one logical block. Also it is not quite suitable for scalable interfaces as there object properties modifies standart and actually defines new item (object) behavior as stretching is one of the main function of a control in such UI, therefore first look on a control should show how it works.
 
-- id
-- Property declarations
+For consistency [QML object attributes](https://doc.qt.io/qt-6/qtqml-syntax-objectattributes.html)
+should be structured in the following order:
+
+- id (and `objectName` if required for unit or Squish testing)
+- properties:
+    + object property initializations without a gap with `id`
+    + custom object properties and property aliases that define our interface.
+    + private properties with undercored names if necessary
+    + attached properties 
 - Signal declarations
-- Property initializations
-- Attached properties and signal handlers
-- States
-- Transitions
 - Signal handlers
+- Attached signal handlers
+- JavaScript functions which are "public" interfaces of an object (control)
 - Child objects
   + Visual Items
   + Qt provided non-visual items
   + Custom non-visual items
+- States
+- Transitions
 - `QtObject` for encapsulating private members[1](https://bugreports.qt.io/browse/QTBUG-11984)
-- JavaScript functions
+  + "private" (internal) JavaScript functions 
 
 The main purpose for this order is to make sure that the most intrinsic properties of a type is
-always the most visible one in order to make the interface easier to digest at a first glance.
-Although it could be argued that the JavaScript functions are also part of the interface, the ideal
-is to have no functions at all.
+always the most visible one in order to make the interface easier to digest at a first glance. 
+So I prefer this attributes order where 
+[QGC coding style](https://github.com/mavlink/qgroundcontrol/blob/master/src/QmlControls/QGCButton.qml) 
+is a good example.
 
-## CS-1: Signal Handler Ordering
+## Signal Handler Ordering
 
 When handling the signals attached to an `Item`, make sure to always leave
 `Component.onCompleted` to the last line.
@@ -142,11 +152,11 @@ Item {
 }
 ```
 
-## CS-2: Property Initialization Order
+## Property Initialization Order
 
 The first property assignment must always be the `id` of the component. If you
 want to declare custom properties for a component, the declarations are always
-above the first property assignment.
+after properties assignments.
 
 ```qml
 // Wrong
@@ -159,10 +169,9 @@ Item {
 // Correct
 Item {
     id: myItem
+    someProperty: false
 
     property int otherProperty: -1
-
-    someProperty: false
 }
 ```
 
@@ -170,15 +179,12 @@ There's also a bit of predefined order for property assignments. The order goes
 as follows:
 
 - id
-- x
-- y
+- x, y or anchors
 - width
 - height
-- anchors
 
 The goal here is to put the most obvious and defining properties at the top for
-easy access and visibility. For example, for an `Image` you may decide to also
-put `sourceSize` above `anchors`.
+easy access and visibility. 
 
 ------
 
@@ -202,6 +208,7 @@ Item {
     x: 23
     y: 32
     someProperty: true
+    
     onOtherEvent: {
     }
     onSomethingHappened: {
@@ -213,43 +220,21 @@ It is usually harder to see the property assignments If they are mixed with
 signal handlers. That's why we are putting the assignments above the signal
 handlers.
 
-### CS-3: Function Ordering
+### Function Ordering
 
 Although there are no private and public functions in QML, you can provide a
 similar mechanism by wrapping the properties and functions that are only supposed
 to be used internally in `QtObject `.
 
-Public function implementations are always put at the very bottom of the file. Even though we
-prioritize putting the public declarations at the top of the file for other types, I encourage you
-to put the public functions at the bottom because if the number of lines get larger for a function,
-it significantly reduces the readability of the QML document. Ideally, you shouldn't have any
-functions at all and strive to rely on declarative properties of your component as much as
-possible.
+Private function implementations are always put at the very bottom of the file 
+(Sometimes this is also suggested by Qt in their examples). For public we
+prioritize putting the declarations at the top of the file. While if the large 
+function may significantly reduce the readability of the QML document modern 
+editors may collapse it if necessary. Ideally, you shouldn't have any
+functions at all and strive to rely on declarative properties of your component 
+as much as possible.
 
-```qml
-// Wrong
-Item {
-
-    function someFunction() {
-    }
-
-    someProperty: true
-}
-
-// Correct
-Item {
-    someProperty: true
-    onOtherEvent: {
-    }
-    onSomethingHappened: {
-    }
-
-    function someFunction() {
-    }
-}
-```
-
-### CS-4: Animations
+### Animations
 
 When using any subclass of `Animation`, especially nested ones like
 `SequentialAnimation`, try to reduce the number of properties in one line.
@@ -285,11 +270,11 @@ SequentialAnimation {
 }
 ```
 
-### CS-5: Specifying IDs for Objects
+### Specifying IDs for Objects
 
 If an object does not need to be accessed for a functionality, avoid setting the `id` property.
-This way you'll be less likely to run into duplicate `id` problem. Also, having an id for an object
-puts additional cognitive stress because it now means that there's additional relationships that we
+This way you'll be less likely to run into duplicate `id` problem and reduces the 
+code which is always suitable in big QML components. Also, having an id for an object puts additional cognitive stress because it now means that there's additional relationships that we
 need to care for.
 
 If you want to mark the type with a descriptor but you don't intend to reference
@@ -303,7 +288,7 @@ See [QTBUG-71578](https://bugreports.qt.io/browse/QTBUG-71578) and
 [QTBUG-76016](https://bugreports.qt.io/browse/QTBUG-76016) for more details
 on this.
 
-### CS-6: Property Assignments
+### Property Assignments
 
 When assigning grouped properties, always prefer the dot notation If you are only
 altering just one property. Otherwise, always use the group notation.
@@ -375,7 +360,7 @@ component SomeSpecialComponent: Rectangle {
 }
 ```
 
-### CS-7: Import Statements
+### Import Statements
 
 As a general rule, you should always prefer C++ over JavaScript to do heavy lifting. If there are
 cases where you justify having a separate JavaScript file, keep these in mind.
@@ -408,83 +393,72 @@ When importing other modules, use the following order;
 
 ```qml
 // First Qt imports
-import QtQuick 2.15
-import QtQuick.Controls 2.15
+import QtQuick 
+import QtQuick.Controls 
 // Then custom imports
-import my.library 1.0
+import my.library 
 
 Item {
-    id: root
-
     // ----- Property Declarations
-
-    // Required properties should be at the top.
-    required property int radius: 0
-
-    property int radius: 0
-    property color borderColor: "blue"
-
-    // ----- Signal declarations
-
-    signal clicked()
-    signal doubleClicked()
-
-    // ----- In this section, we group the size and position information together.
-
+    id: root
+    anchors.top: parent.top // If a single assignment, dot notation can be used.
     x: 0
     y: 0
     z: 0
     width: 100
     height: 100
-    anchors.top: parent.top // If a single assignment, dot notation can be used.
-    // If the item is an image, sourceSize is also set here.
-    // sourceSize: Qt.size(12, 12)
-
-    // ----- Then comes the other properties. There's no predefined order to these.
-
-    // Do not use empty lines to separate the assignments. Empty lines are reserved
-    // for separating type declarations.
     enabled: true
     layer.enabled: true
 
-    // ----- Then attached properties and attached signal handlers.
+    // Required properties should be at the top.
+    required property int radius: 0
 
+    property int radius: 0
+    property alias color rect.color
+
+    // ----- Then attached properties 
     Layout.fillWidth: true
     Drag.active: false
-    Drag.onActiveChanged: {
+    
+    // ----- Signal declarations
+    signal clicked()
+    signal doubleClicked()
+    
+    // ----- Public JavaScript functions
+    function collapse() {
 
     }
 
-    // ----- States and transitions.
-
-    states: [
-        State {
-
+    function setCollapsed(value: bool) {
+        if (value === true) {
         }
-    ]
-    transitions: [
-        Transitions {
-
+        else {
         }
-    ]
+    }
 
     // ----- Signal handlers
-
     onWidthChanged: { // Always use curly braces.
 
     }
+    
     // onCompleted and onDestruction signal handlers are always the last in
     // the order.
     Component.onCompleted: {
 
     }
+    
     Component.onDestruction: {
 
     }
 
-    // ----- Visual children.
+    // ----- Then attached signal handlers
+    Drag.onActiveChanged: {
 
+    }
+
+    // ----- Visual children.
     Rectangle {
+        id: rect
         height: 50
         anchors: { // For multiple assignments, use group notation.
             top: parent.top
@@ -516,23 +490,28 @@ Item {
 
     }
 
+    // ----- States and transitions.
+    states: [
+        State {
+
+        }
+    ]
+    
+    transitions: [
+        Transitions {
+
+        }
+    ]
+
     QtObject {
         id: privates
 
         property int diameter: 0
     }
 
-    // ----- JavaScript functions
-
-    function collapse() {
-
-    }
-
-    function setCollapsed(value: bool) {
-        if (value === true) {
-        }
-        else {
-        }
+    // Private JavaScript functions or move this to the `privates` object
+    function _doSomethingPrivate(x) {   
+        ...                             
     }
 }
 ```
@@ -548,7 +527,7 @@ it will also update its position.
 
 So consider the following rules when you are using bindings.
 
-## B-1: Prefer Bindings over Imperative Assignments
+## Prefer Bindings over Imperative Assignments
 
 See the related section on [Qt Documentation](https://doc.qt.io/qt-6/qtquick-bestpractices.html#prefer-declarative-bindings-over-imperative-assignments).
 
@@ -558,12 +537,12 @@ bottlenecks can be.
 
 If you suspect that the performance issue you are having is related to
 excessive evaluations of bindings, then use the QML profiler to confirm your
-suspicion and then opt-in to use imperative option.
+suspicion and only after this opt-in to use imperative option.
 
 Refer to the [official documentation](https://doc.qt.io/qtcreator/creator-qml-performance-monitor.html)
 on how to use QML profiler.
 
-## B-2: Making `Connections`
+## Making `Connections`
 
 A `Connections` object is used to handle signals from arbitrary `QObject` derived
 classes in QML. One thing to keep in mind when using connections is the default
@@ -574,7 +553,7 @@ get signals that are not meant to be handled.
 
 Also note that using a `Connections` object will incur a slight performance/memory penalty since
 it's another allocation that has to be done. If you are concerned about this you can use
-`QtObject.connect` method, but [be careful](#sh-1-try-to-avoid-using-connect-function-in-models) of
+`QtObject.connect` method, but [be careful](#try-to-avoid-using-connect-function-in-models) of
 the pitfalls of this solution.
 
 ```qml
@@ -610,7 +589,7 @@ Item {
 }
 ```
 
-## B-3: Use `Binding` Object
+## Use `Binding` Object
 
 `Binding`'s `when` property can be used to enable or disable a binding expression
 depending on a condition. If the binding that you are using is complex and does
@@ -641,61 +620,21 @@ case unless the binding expression is expensive (e.g It changes the item's
 `anchor` which causes a whole chain reaction and causes other items to be
 repositioned.).
 
-## B-4: KISS It
+## KISS It
 
-Removed. No longer applies. Keeping the record to not mess with item numbers.
-
-### Justification for Removal
-
-The QML engine changed a lot since I first wrote this guide. While it is still a good idea to keep
-the bindings simple (ie Don't call any expensive functions in a binding), it'd be incorrect to
-suggest there would be certain optimizations. The advice about avoiding `var` properties still
-apply, and you should strive to use the most precise type possible.
-
-### Previous Content
-
-~You are probably already familiar with the [KISS principle](https://en.wikipedia.org/wiki/KISS_principle).
+A property binding expression will be re-evaluated if any of the properties it 
+references are changed. As such, binding expressions should be kept as simple as 
+possible ([KISS principle](https://en.wikipedia.org/wiki/KISS_principle)).
 QML supports optimization of binding expressions. Optimized bindings do not require
 a JavaScript environment hence it runs faster. The basic requirement for optimization
 of bindings is that the type  information of every symbol accessed must be known at
-compile time.~
-
-~So, avoid accessing `var` properties. You can see the full list of prerequisites
-of optimized bindings [here](https://doc.qt.io/qt-6/qtquick-performance.html#property-bindings).~
-
-## B-5: Be Lazy
-
-Removed. No longer applies. Keeping the record to not mess with item numbers.
-
-### Justification for Removal
-
-Declarative is better than imperative in QML. This promotes an imperative approach, and doesn't
-provide a great value. If you are in need of disabling or enabling bindings, prefer
-[Binding](#b-1-prefer-bindings-over-imperative-assignments) objects instead. Or use a boolean flag
+compile time. So, avoid accessing `var` properties. You can see the full list of prerequisites
+of optimized bindings [here](https://doc.qt.io/qt-6/qtquick-performance.html#property-bindings).
+If you need to disable or enable bindings, prefer using 
+[Binding objects](#use-binding-object). Or use a boolean flag
 to enable a binding, e.g `visible: privates.bindingEnabled ? root.count > 0 : false`.
 
-### Previous Content
-
-~There may be cases where you don't need the binding immediately but when a certain
-condition is met. By lazily creating a binding, you can avoid unnecessary executions.
-To create a binding during runtime, you can use `Qt.binding()`.~
-
-```qml
-Item {
-    property int edgePosition: 0
-
-    Component.onCompleted: {
-        if (checkForSomeCondition() == true) {
-            // bind to the result of the binding expression passed to Qt.binding()
-            edgePosition = Qt.binding(function() { return x + width })
-        }
-    }
-}
-```
-
-~You can also use `Qt.callLater` to reduce the redundant calls to a function.~
-
-## B-6: Avoid Unnecessary Re-Evaluations
+## Avoid Unnecessary Re-Evaluations
 
 If you have a loop or process where you update the value of the property, you may
 want to use a temporary local variable where you accumulate those changes and only
@@ -709,11 +648,11 @@ import QtQuick 2.3
 
 Item {
     id: root
+    width: 200
+    height: 200
 
     property int accumulatedValue: 0
 
-    width: 200
-    height: 200
     Component.onCompleted: {
         const someData = [ 1, 2, 3, 4, 5, 20 ];
         for (let i = 0; i < someData.length; ++i) {
@@ -736,11 +675,11 @@ import QtQuick 2.3
 
 Item {
     id: root
+    width: 200
+    height: 200
 
     property int accumulatedValue: 0
 
-    width: 200
-    height: 200
     Component.onCompleted: {
         const someData = [ 1, 2, 3, 4, 5, 20 ];
         let temp = accumulatedValue;
@@ -771,7 +710,7 @@ It always should be preferred to use C++ to add functionality to a QML applicati
 But it is important to know which is the best way to expose your C++ classes, and
 it depends on your use case.
 
-## CI-1: Avoid Context Properties
+## Avoid Context Properties
 
 Context properties are registered using
 
@@ -790,7 +729,7 @@ with QML scene provided that the required properties are set.
 
 See [QTBUG-73064](https://bugreports.qt.io/browse/QTBUG-73064).
 
-## CI-2: Use Singleton for Common API Access
+## Use Singleton for Common API Access
 
 There are bound to be cases where you have to provide a single instance for a
 functionality or common data access. In this situation, resort to using a singleton
@@ -889,7 +828,7 @@ This version allows you to de-couple from the singleton, enable it to be resuabl
 that wants to show a selected color, and you could easily run this through `qmlscene` and inspect
 its behavior.
 
-## CI-3: Prefer Instantiated Types Over Singletons For Data
+## Prefer Instantiated Types Over Singletons For Data
 
 Instantiated types are exposed to QML using:
 
@@ -911,12 +850,13 @@ Window {
     Column {
         Repeater {
             model: Palette.selectedColors
+            
             delegate: ColorViewer {
-                required property color color
-                required property string colorName
-
                 selectedColor: color
                 selectedColorName: colorName
+
+                required property color color
+                required property string colorName
             }
         }
     }
@@ -924,7 +864,7 @@ Window {
 ```
 
 The code above is a perfectly valid QML code. We'll get our model from the singleton, and display it
-with the reusable component we created in CI-2. However, there's still a problem here. `ColorsWindow`
+with the reusable component we created in earlier. However, there's still a problem here. `ColorsWindow`
 is now bound to the model from `Palette` singleton. And If I wanted to have the user select two
 different sets of colors, I would need to create another file with the same contents and use that.
 Now we have 2 components doing basically the same thing. And those two components need to be
@@ -949,12 +889,13 @@ Window {
             model: root.model
             // Alternatively
             model: PaletteColorsModel { }
+            
             delegate: ColorViewer {
-                required property color color
-                required property string colorName
-
                 selectedColor: color
                 selectedColorName: colorName
+
+                required property color color
+                required property string colorName
             }
         }
     }
@@ -991,7 +932,7 @@ class PaletteColorsModel
 };
 ```
 
-## CI-4: Watch Out for Object Ownership Rules
+## Watch Out for Object Ownership Rules
 
 When you are exposing data to QML from C++, you are likely to pass around custom
 data types as well. It is important to realize the implications of ownership when
@@ -1017,7 +958,7 @@ Most applications are not likely to have memory limitations. But in case you are
 working on a memory limited hardware or you just really care about memory allocations,
 follow these steps to reduce your memory usage.
 
-## PM-1: Reduce the Number of Implicit Types
+## Reduce the Number of Implicit Types
 
 If a type defines custom properties, that type becomes an implicit type to the JS
 engine and additional type information has to be stored.
@@ -1089,7 +1030,7 @@ Signals are a very powerful mechanism in Qt/QML. And the fact that you can
 connect to signals from C++ makes it even better. But in some situations, If you
 don't handle them correctly you might end up scratching your head.
 
-## SH-1: Try to Avoid Using connect Function in Models
+## Try to Avoid Using connect Function in Models
 
 You can have signals in the QML side, and the C++ side. Here's an example for
 both cases.
@@ -1098,7 +1039,7 @@ QML Example.
 
 ```qml
 // MyButton.qml
-import QtQuick.Controls 2.3
+import QtQuick.Controls
 
 Button {
     id: root
@@ -1171,6 +1112,8 @@ Let's examine what happens with a more concrete example.
 ```qml
 ApplicationWindow {
     id: root
+    width: 640
+    height: 480
 
     property list<QtObject> myObjects: [
         QtObject {
@@ -1199,9 +1142,6 @@ ApplicationWindow {
         }
     ]
 
-    width: 640
-    height: 480
-
     ListView {
         anchors {
             top: parent.top
@@ -1214,10 +1154,10 @@ ApplicationWindow {
         model: root.myObjects.length
         delegate: Button {
             id: self
-
+            text: "Button " + index
+  
             readonly property string name: "Button #" + index
 
-            text: "Button " + index
             onClicked: {
                 root.myObjects[index].somethingHappened()
             }
@@ -1241,6 +1181,7 @@ ApplicationWindow {
             horizontalCenter: parent.horizontalCenter
         }
         text: "Emit Last Signal"
+        
         onClicked: {
             root.myObjects[root.myObjects.length - 1].somethingHappened()
         }
@@ -1266,10 +1207,10 @@ this:
 ```qml
 delegate: Button {
     id: self
+    text: "Button " + index
 
     readonly property string name: "Button #" + index
 
-    text: "Button " + index
     onClicked: {
         root.myObjects[index].somethingHappened()
     }
@@ -1307,7 +1248,7 @@ Item {
 }
 ```
 
-## SH-2: When to use Functions and Signals
+## When to use Functions and Signals
 
 When coming from imperative programming, it might be very tempting to use signals
 very similar to functions. Resist this temptation. Especially when communicating
@@ -1424,7 +1365,7 @@ and should be followed, but there are cases where you can't avoid having JavaScr
 code for your UI. In those cases, follow these guidelines to ensure a good use of
 JavaScript in QML.
 
-## JS-1: Use Arrow Functions
+## Use Arrow Functions
 
 Arrow functions were introduced in ES6. Its syntax is pretty close to C++ lambdas
 and they have a pretty neat feature that makes them most comfortable to use
@@ -1449,7 +1390,7 @@ Item {
 The arrow function version is easier on the eyes and cleaner to write.
 For more information about arrow functions, head over to the [MDN Blog](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/Arrow_functions)
 
-## JS-2: Use the Modern Way of Declaring Variables
+## Use the Modern Way of Declaring Variables
 
 With ES6, there are 3 ways of delcaring a variable: `var`, `let`, and `const`.
 
@@ -1491,7 +1432,7 @@ and [let](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Stat
 States and transitions are a powerful way to create dynamic UIs. Here are some things to keep in
 mind when you are using them in your projects.
 
-## ST-1: Don't Define Top Level States
+## Don't Define Top Level States
 
 Defining states at the top-level of a reusable component can cause breakages if the user of your
 components also define their own states for their specific use case. 
@@ -1500,21 +1441,10 @@ components also define their own states for their specific use case.
 // MyButton.qml
 Rectangle {
     id: root
+    color: "red"
 
     property alias text: lb.text
     property alias hovered: ma.containsMouse
-
-    color: "red"
-    states: [
-        State {
-            when: ma.containsMouse
-
-            PropertyChanges {
-                target: root
-                color: "yellow"
-            }
-        }
-    ]
 
     MouseArea {
         id: ma
@@ -1526,6 +1456,17 @@ Rectangle {
         id: lb
         anchors.centerIn: parent
     }
+    
+    states: [
+        State {
+            when: ma.containsMouse
+
+            PropertyChanges {
+                target: root
+                color: "yellow"
+            }
+        }
+    ]
 }
 
 // MyItem.qml
@@ -1559,11 +1500,11 @@ In order to avoid this problem, create your top-level state in a separate item o
 ```qml
 Rectangle {
     id: root
+    color: "red"
 
     property alias text: lb.text
     property alias hovered: ma.containsMouse
 
-    color: "red"
 
     MouseArea {
         id: ma
@@ -1574,6 +1515,20 @@ Rectangle {
     Label {
         id: lb
         anchors.centerIn: parent
+    }
+
+    // another item
+    Item {
+        states: [
+            State {
+                when: ma.containsMouse
+
+                PropertyChanges {
+                    target: root
+                    color: "yellow"
+                }
+            }
+        ]
     }
 
     // A State group or
@@ -1590,19 +1545,6 @@ Rectangle {
         ]
     }
 
-    // another item
-    Item {
-        states: [
-            State {
-                when: ma.containsMouse
-
-                PropertyChanges {
-                    target: root
-                    color: "yellow"
-                }
-            }
-        ]
-    }
 }
 ```
 
@@ -1615,7 +1557,7 @@ Visual items are at the core of QML, anything that you see in the window (or don
 transparency) are visual items. Having a good understanding of the visual items, their relationship
 to each other, sizing, and positioning will help you create a more robust UI for your application.
 
-## VI-1: Distinguish Between Different Types of Sizes
+## Distinguish Between Different Types of Sizes
 
 When thinking about geometry, we think in terms of `x`, `y`, `width` and `height`. This defines
 where our items shows up in the scene and how big it is. `x` and `y` are pretty straightforward but
@@ -1688,7 +1630,7 @@ it. This implicit size needs to take into account its visual components (the box
 that we can see the component properly. If this is not provided, it's difficult for the user of your
 component to set a proper size for it.
 
-## VI-2: Be Careful with a Transparent `Rectangle`
+## Be Careful with a Transparent `Rectangle`
 
 `Rectangle` should never be used with a transparent color except when you need to draw a border.
 This is especially true if you are using a `Rectangle` as part of a delegate that's supposed to be
