@@ -1,19 +1,16 @@
 # Introduction
+Based on my experience and on:
 
-The content that you see here is mostly based on my experience working with QML
-in a large project with a diverse team of developers and designers. I update
-the document as my opinions about certain things become validated by real life
-experience.
+  - Original [Furkanzmc/QML-Coding-Guide](https://github.com/Furkanzmc/QML-Coding-Guide) content
+  - Qt best practices:
+    - [Best Practices for QML and Qt Quick](https://doc.qt.io/qt-6/qtquick-bestpractices.html)
+    - [Performance Considerations And Suggestions](https://doc.qt.io/qt-6/qtquick-performance.html)
+    - [Scalability](https://doc.qt.io/qt-6/scalability.html)
+    - [QML Application Structuring Approaches](https://wiki.qt.io/QML_Application_Structuring_Approaches) (some info is actual, some outdated)
+  - [QGC Coding Style](https://github.com/mavlink/qgroundcontrol/blob/master/CodingStyle.qml)
+  - some good examples and common sense first of all.
 
-You may not agree with some of the ideas laid out here, in those cases please
-create an issue to discuss and update accordingly. I'll keep updating this guide
-as I learn new things. Contributions are vital to this document because it needs
-to reflect tried and validated ideas of more people to make sense in a general
-sense. It's likely that I may not have done a good job at explaining a concept.
-I would appreciate any contributions to improve it.
-
-Please don't hesitate to raise issues and submit PRs. Even the tiniest
-contribution matters.
+This write-up summarizes best practices towards good user experience, UI look-and-feel, scalability, performance, much fewer errors, extendability and maintenance. They are to be applied early in the development cycle in order to avoid technical debt and _costly_ refactoring later.
 
 # Table of Contents
 
@@ -58,7 +55,7 @@ contribution matters.
 This section provides details about how to format the order of properties, signals,
 and functions to make things easy on the eyes and quickly switch to related code block.
 
-[QML object attributes](https://doc.qt.io/qt-5/qtqml-syntax-objectattributes.html)
+[QML object attributes](https://doc.qt.io/qt-6/qtqml-syntax-objectattributes.html)
 are always structured in the following order:
 
 - id
@@ -391,7 +388,7 @@ file is meant as a library, this does not apply.
 If you are not making use of the imported module in the QML file, consider moving
 the import statement to the JavaScript file. But note that once you import something
 in the JavaScript file, the imports will no longer be shared. For the complete
-rules see [here](https://doc.qt.io/qt-5/qtqml-javascript-imports.html#imports-within-javascript-resources).
+rules see [here](https://doc.qt.io/qt-6/qtqml-javascript-imports.html#imports-within-javascript-resources).
 
 `Qt.include()` is [deprecated](https://doc.qt.io/qt-6/qml-qtqml-qt-obsolete.html#include-method)
 and should not be used.
@@ -553,7 +550,7 @@ So consider the following rules when you are using bindings.
 
 ## B-1: Prefer Bindings over Imperative Assignments
 
-See the related section on [Qt Documentation](https://doc.qt.io/qt-5/qtquick-bestpractices.html#prefer-declarative-bindings-over-imperative-assignments).
+See the related section on [Qt Documentation](https://doc.qt.io/qt-6/qtquick-bestpractices.html#prefer-declarative-bindings-over-imperative-assignments).
 
 The official documentation explains things well, but it is also important to
 understand the performance complications of bindings and understand where the
@@ -664,7 +661,7 @@ of bindings is that the type  information of every symbol accessed must be known
 compile time.~
 
 ~So, avoid accessing `var` properties. You can see the full list of prerequisites
-of optimized bindings [here](https://doc.qt.io/qt-5/qtquick-performance.html#bindings).~
+of optimized bindings [here](https://doc.qt.io/qt-6/qtquick-performance.html#property-bindings).~
 
 ## B-5: Be Lazy
 
@@ -1010,7 +1007,7 @@ There might also be cases where you expose data from a singleton class without a
 parent and the data gets destroyed because QML object that receives it will take
 ownership and destroy it. And you will end up accessing data that doesn't exist.
 Ownership is **not** transferred as the result of a property access. For data
-ownership rules see [here](https://doc.qt.io/qt-5/qtqml-cppintegration-data.html#data-ownership).
+ownership rules see [here](https://doc.qt.io/qt-6/qtqml-cppintegration-data.html#data-ownership).
 
 To learn more about the real life implications of this read [this blog post](https://www.embeddeduse.com/2018/04/02/qml-engine-deletes-c-objects-still-in-use/).
 
@@ -1034,7 +1031,7 @@ Rectangle {
 }
 ```
 
-You should follow the advice from the [official documentation](http://doc.qt.io/qt-5/qtquick-performance.html#avoid-defining-multiple-identical-implicit-types)
+You should follow the advice from the [official documentation](http://doc.qt.io/qt-6/qtquick-performance.html#avoid-defining-multiple-identical-implicit-types)
 and split the type into its own component If it's used in more than one place.
 But sometimes, that might not make sense for your case. If you are using a lot of
 custom properties in your QML file, consider wrapping the custom properties of
@@ -1159,7 +1156,7 @@ has access to its enclosing context. So, as long as we have the instance of
 `MyItem`, whenever `somethingChanged` is emitted we'd get a log saying
 `my_item_is_alive`.
 
-Here's a quote directly from [Qt documentation](https://doc.qt.io/qt-5/qml-qtquick-listview.html):
+Here's a quote directly from [Qt documentation](https://doc.qt.io/qt-6/qml-qtquick-listview.html):
 
 > Delegates are instantiated as needed and may be destroyed at any time. They
 > are parented to `ListView`'s `contentItem`, not to the view itself. State
@@ -1318,7 +1315,7 @@ between the C++ layer of your application, misusing signals can be very confusin
 down the line.
 
 Let's first clearly define what a signal should be doing. Here's how
-[Qt](https://doc.qt.io/qt-5/signalsandslots.html#signals) defines it.
+[Qt](https://doc.qt.io/qt-6/signalsandslots.html#signals) defines it.
 
 > Signals are emitted by an object when its internal state has changed in some
 > way that might be interesting to the object's client or owner. 
@@ -1821,4 +1818,4 @@ Please note that this will not matter that much when you are drawing a few recta
 there. The problem will present itself when you are using translucency in the context of a delegate
 because there can potentially be creating thousands of these rectangles.
 
-See also: [Translucent vs Opaque](https://doc.qt.io/qt-5/qtquick-performance.html#translucent-vs-opaque)
+See also: [Translucent vs Opaque](https://doc.qt.io/qt-6/qtquick-performance.html#translucent-vs-opaque)
