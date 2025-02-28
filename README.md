@@ -2,63 +2,245 @@
 
 - [Introduction](#introduction)
 - [Code Style](#code-style)
-    - [QML Object Declarations](#qml-object-declarations)
-    - [Signal Handler Ordering](#signal-handler-ordering)
-    - [Property Initialization Order](#property-initialization-order)
-    - [Function Ordering](#function-ordering)
-    - [Animations](#animations)
-    - [Specifying IDs for Objects](#specifying-ids-for-objects)
-    - [Property Assignments](#property-assignments)
-    - [Import Statements](#import-statements)
-    - [Full Example](#full-example)
+    + [Scalability](#scalability)
+        * [Scalability techniques overview](#scalability-techniques-overview)
+        * [Items sizes proportional to default font sizes](#items-sizes-proportional-to-default-font-sizes)
+        * [Positioners vs Layouts](#positioners-vs-Layouts)
+        * [Load components on demand](#load-components-on-demand)
+    + [QML Object Declarations](#qml-object-declarations)
+    + [Signal Handler Ordering](#signal-handler-ordering)
+    + [Property Initialization Order](#property-initialization-order)
+    + [Function Ordering](#function-ordering)
+    + [Animations](#animations)
+    + [Specifying IDs for Objects](#specifying-ids-for-objects)
+    + [Property Assignments](#property-assignments)
+    + [Import Statements](#import-statements)
+    + [Full Example](#full-example)
 - [Bindings](#bindings)
-    - [Prefer Bindings over Imperative Assignments](#prefer-bindings-over-imperative-assignments)
-    - [Making `Connections`](#making-connections)
-    - [Use `Binding` Object](#use-binding-object)
-    - [KISS It](#kiss-it)
-    - [Avoid Unnecessary Re-Evaluations](#avoid-unnecessary-re-evaluations)
+    + [Prefer Bindings over Imperative Assignments](#prefer-bindings-over-imperative-assignments)
+    + [Making `Connections`](#making-connections)
+    + [Use `Binding` Object](#use-binding-object)
+    + [KISS It](#kiss-it)
+    + [Avoid Unnecessary Re-Evaluations](#avoid-unnecessary-re-evaluations)
 - [C++ Integration](#c-integration)
-    - [Avoid Context Properties](#avoid-context-properties)
-    - [Use Singleton for Common API Access](#use-singleton-for-common-api-access)
-    - [Prefer Instantiated Types Over Singletons For Data](#prefer-instantiated-types-over-singletons-for-data)
-    - [Watch Out for Object Ownership Rules](#watch-out-for-object-ownership-rules)
+    + [Avoid Context Properties](#avoid-context-properties)
+    + [Use Singleton for Common API Access](#use-singleton-for-common-api-access)
+    + [Prefer Instantiated Types Over Singletons For Data](#prefer-instantiated-types-over-singletons-for-data)
+    + [Watch Out for Object Ownership Rules](#watch-out-for-object-ownership-rules)
 - [Performance and Memory](#performance-and-memory)
-    - [Reduce the Number of Implicit Types](#reduce-the-number-of-implicit-types)
+    + [Reduce the Number of Implicit Types](#reduce-the-number-of-implicit-types)
 - [Signal Handling](#signal-handling)
-    - [Try to Avoid Using connect Function in Models](#try-to-avoid-using-connect-function-in-models)
-    - [When to use Functions and Signals](#when-to-use-functions-and-signals)
+    + [Try to Avoid Using connect Function in Models](#try-to-avoid-using-connect-function-in-models)
+    + [When to use Functions and Signals](#when-to-use-functions-and-signals)
 - [JavaScript](#javascript)
-    - [Use Arrow Functions](#use-arrow-functions)
-    - [Use the Modern Way of Declaring Variables](#use-the-modern-way-of-declaring-variables)
+    + [Use Arrow Functions](#use-arrow-functions)
+    + [Use the Modern Way of Declaring Variables](#use-the-modern-way-of-declaring-variables)
 - [States and Transitions](#states-and-transitions)
-    - [Don't Define Top Level States](#dont-define-top-level-states)
+    + [Don't Define Top Level States](#dont-define-top-level-states)
 - [Visual Items](#visual-items)
-    - [Distinguish Between Different Types of Sizes](#distinguish-between-different-types-of-sizes)
-    - [Be Careful with a Transparent `Rectangle`](#be-careful-with-a-transparent-rectangle)
+    + [Distinguish Between Different Types of Sizes](#distinguish-between-different-types-of-sizes)
+    + [Be Careful with a Transparent `Rectangle`](#be-careful-with-a-transparent-rectangle)
 
 
 # Introduction
-This coding guide based on my experience working on big Qt/QML projects and on 
-the following sources, best practices and recommendations:
+Coding guide is based on my experience working on big Qt/QML projects, 
+some good examples and common sense first of all, as well as on the following 
+sources, best practices and recommendations:
 
   - Original [Furkanzmc/QML-Coding-Guide](https://github.com/Furkanzmc/QML-Coding-Guide) content
   - Qt best practices:
-    - [Best Practices for QML and Qt Quick](https://doc.qt.io/qt-6/qtquick-bestpractices.html)
-    - [Performance Considerations And Suggestions](https://doc.qt.io/qt-6/qtquick-performance.html)
-    - [Scalability](https://doc.qt.io/qt-6/scalability.html)
-    - [QML Application Structuring Approaches](https://wiki.qt.io/QML_Application_Structuring_Approaches) (some info is actual, some outdated)
-  - [QGC Coding Style](https://github.com/mavlink/qgroundcontrol/blob/master/CodingStyle.qml)
-  - some good examples and common sense first of all.
+    + [Best Practices for QML and Qt Quick](https://doc.qt.io/qt-6/qtquick-bestpractices.html)
+    + [Performance Considerations And Suggestions](https://doc.qt.io/qt-6/qtquick-performance.html)
+    + [Scalability](https://doc.qt.io/qt-6/scalability.html)
+    + [QML Application Structuring Approaches](https://wiki.qt.io/QML_Application_Structuring_Approaches) (some info is actual, some outdated)
+  - [QGroundControl Coding Style](https://github.com/mavlink/qgroundcontrol/blob/master/CodingStyle.qml)
 
-This write-up summarizes best practices towards good user experience, UI look-and-feel, scalability, performance, much fewer errors, extendability and maintenance. They are to be applied early in the development cycle in order to avoid technical debt and _costly_ refactoring later.
+This write-up summarizes best practices towards good user experience, 
+UI look-and-feel, scalability, performance, much fewer errors, extendability and 
+maintenance. They are to be applied early in the development cycle in order to 
+avoid technical debt and _costly_ refactoring later. Also document includes
+justifications for this or that technical decisions.
 
 # Code Style
+
+## Scalability
+
+### Scalability techniques overview
+When we develop applications for several different mobile device platforms, 
+we may face the following challenges:
+
+  - Mobile device platforms support devices with varying screen configurations: 
+    size, aspect ratio, orientation, and density.
+  - Different platforms have different UI conventions and you need to meet the 
+    users' expectations on each platform.
+    
+You need to consider scalability when:
+
+  - You want to deploy your application to more than one device platform, 
+  such as Android and iOS, or more than one device screen configuration.
+  - Your want to be prepared for new devices that might appear on the market 
+  after your initial deployment.
+
+So since display resolutions improve, a scalable application UI becomes more and 
+more important. While Qt provides only some [general recommendations](https://doc.qt.io/qt-6/scalability.html) good without code examples for this, 
+some of them  are very suboptimal like one of the approaches is to maintain several 
+copies of the UI for different screen resolutions, and load the appropriate one 
+depending on the available resolution. This adds significant development and 
+maintenance overhead.
+
+Considering scalability feature for the UI may significantly impact on the overal 
+application architecture and components design so should be taken into account 
+on very early development stage to avoid further technical debt and refactoring.
+
+There is no unique, universal or the best aprroach organizing scalability while 
+Qt Quick allows to develop applications that can run on different types of devices, 
+screen sizes, aspect ratio, orientation, DPI, etc. Application can cope with 
+different screen configurations. However, there is always a certain amount 
+of fixing and polishing needed to create an optimal user experience for each 
+target platform.
+
+[Good scalable UI organization example](https://github.com/mavlink/qgroundcontrol/blob/master/CodingStyle.qml) provided by QGroundControl - 
+Cross-platform ground control station for drones (Android, iOS, Mac OS, Linux, 
+Windows). There are a lot of [QML controls](https://github.com/mavlink/qgroundcontrol/blob/master/src/QmlControls/) to learn scalability and positioning from.
+
+### Items sizes proportional to default font sizes
+So for the above type of scalability organization, items sizes and 
+layouts/positioners spacing should be proportional to default font sizes. 
+Example:
+
+```qml
+Item {
+    // Property binding to item properties
+    width:  AppConstantsSingleton.defaultFontPixelHeight * 10 
+    // No hardcoded sizing. All sizing must be relative to default font size
+    height: AppConstantsSingleton.defaultFontPixelHeight * 20
+}
+```
+**Example:** Another type of scaling: Item stretchable to inner text width:
+
+```qml
+    Rectangle {
+        color:  "green"
+        width:  t_metrics.tightBoundingRect.width
+        height: t_metrics.tightBoundingRect.height
+
+        Text {
+            id:     a_text
+            text:   "r"
+            color:  "white"
+            anchors.centerIn: parent
+        }
+
+        TextMetrics {
+            id:     t_metrics
+            font:   a_text.font
+            text:   a_text.text
+        }
+    }
+```
+
+### Positioners vs Layouts
+As long as items should be proportional to the default font size, 
+[Positioner](https://doc.qt.io/qt-6/qml-qtquick-positioner.html)s 
+([Row](https://doc.qt.io/qt-6/qml-qtquick-row.html), 
+[Column](https://doc.qt.io/qt-6/qml-qtquick-column.html), 
+[Grid](https://doc.qt.io/qt-6/qml-qtquick-grid.html), 
+[Flow](https://doc.qt.io/qt-6/qml-qtquick-flow.html)) 
+considered preferable comparing to layouts as positioners manage only items 
+position &ndash; not their size. Positioners stretch their size according to 
+content items, which is suitable, for example, for dynamic scrollable pages, 
+lists, etc where we do not know parent size before hand and want parent size 
+rises according to content and do not want items to be resizeable as they 
+already scales according to font sizes.
+
+**Example**. Stretchable 2x2 Grid which prints map parameters titles and their values
+
+```qml
+    Grid {
+        columns: 2
+        columnSpacing: ScreenTools.defaultFontPixelHeight * 2
+
+        Label {
+            text: qsTr("Tile Count:")
+            font.pixelSize: ScreenTools.smallFontPixelHeight
+        }
+        Label {
+            text: QGroundControl.mapEngineManager.tileCountStr
+            font.pixelSize: ScreenTools.smallFontPixelHeight
+            color: _tooManyTiles ? "red" : qgcPal.text
+        }
+
+        Label {
+            text: qsTr("Size (est.):")
+            font.pixelSize: ScreenTools.smallFontPixelHeight
+        }
+        Label {
+            text: QGroundControl.mapEngineManager.tileSizeStr
+            font.pixelSize: ScreenTools.smallFontPixelHeight
+            color: _tooManyTiles ? "red" : qgcPal.text
+        }
+    }
+```
+
+### Load components on demand
+To implement scalable applications using Qt Quick load components on demand by 
+using a `Loader` is suggested as well. This also provides code reusing and 
+universalism and some useful side effect like for QML bindings:
+
+  - few times(!!!) less coding: single `Loader` used for many Items (pages), 
+    pages could be loaded via a model.
+  - much simpler logic
+  - automatic destroying/hiding of dependent objects/items
+  - etc.
+  
+**Example**. Loader with model
+```qml
+    ListView {
+        id: settingsPager
+        anchors {
+            top: parent.top;
+            bottom: parent.bottom
+            horizontalCenter: parent.horizontalCenter;
+            topMargin: ScreenTools.defaultFontPixelHeight
+        }
+        width: parent.width * 0.9
+        spacing: ScreenTools.defaultFontPixelHeight * 2
+        clip: true
+        indicatorEnabled: false
+
+        model: ["qrc:/qml/Controls/UnitsSettings.qml",
+                "qrc:/qml/Controls/MissionParameters.qml",
+                "qrc:/qml/Controls/GeneralSettings.qml"]
+
+        delegate: Item {
+            id: element
+            width: settingsPager.width
+            height: sectionsLoader.height
+
+            Loader {
+                id: sectionsLoader
+                anchors.top: parent.top;
+                width: parent.width
+                source: modelData
+            }
+        }
+    }
+```
 
 ## QML Object Declarations
 This section provides details about how to format the order of properties, signals,
 and functions to make things easy on the eyes and quickly switch to related code block.
 
-Though in Qt documentation and examples, [QML object attributes](https://doc.qt.io/qt-6/qtqml-syntax-objectattributes.html) are always structured in the [following order](https://doc.qt.io/qt-6/qml-codingconventions.html#qml-object-declarations) I found it inconsistent as `id` is also a property and we got a gap in declaration: as all object properties initialization should go in one logical block. Also it is not quite suitable for scalable interfaces as there object properties modifies standart and actually defines new item (object) behavior as stretching is one of the main function of a control in such UI, therefore first look on a control should show how it works.
+Though in Qt documentation and examples, [QML object attributes](https://doc.qt.io/qt-6/qtqml-syntax-objectattributes.html) are always structured in the [following order](https://doc.qt.io/qt-6/qml-codingconventions.html#qml-object-declarations) I found it inconsistent as 
+`id` is also a property and we got a gap in declaration: as all object 
+properties initialization should go in one logical block. Also it is not quite 
+suitable for scalable interfaces as there object properties modifies standart 
+and actually defines new item (object) behavior as stretching is one of the main 
+function (primary) of a control in such UI, therefore first look on a control 
+should show how it works. Qt guys also mention 
+[this conventions are wrong and outdated](https://github.com/Furkanzmc/QML-Coding-Guide/issues/4#issue-524411345) 
+and use natural ordering without such breaks in declaration blocks.
+
 
 For consistency [QML object attributes](https://doc.qt.io/qt-6/qtqml-syntax-objectattributes.html)
 should be structured in the following order:
@@ -84,9 +266,9 @@ should be structured in the following order:
 
 The main purpose for this order is to make sure that the most intrinsic properties of a type is
 always the most visible one in order to make the interface easier to digest at a first glance. 
-So I prefer this attributes order where 
+So I prefer such an attributes order where 
 [QGC coding style](https://github.com/mavlink/qgroundcontrol/blob/master/src/QmlControls/QGCButton.qml) 
-is a good example.
+is a very good organization example.
 
 ## Signal Handler Ordering
 
@@ -185,8 +367,6 @@ as follows:
 
 The goal here is to put the most obvious and defining properties at the top for
 easy access and visibility. 
-
-------
 
 If there are also property assignments along with signal handlers, make sure to
 always put property assignments above the signal handlers.
@@ -459,12 +639,12 @@ Item {
     // ----- Visual children.
     Rectangle {
         id: rect
-        height: 50
         anchors: { // For multiple assignments, use group notation.
             top: parent.top
             left: parent.left
             right: parent.right
         }
+        height: 50
         color: "red"
         layer: {
             enabled: true
@@ -644,7 +824,7 @@ of binding expressions during the intermediate stages of accumulation.
 Here's a bad example straight from Qt documentation:
 
 ```qml
-import QtQuick 2.3
+import QtQuick
 
 Item {
     id: root
@@ -671,7 +851,7 @@ Item {
 And here is the proper way of doing it:
 
 ```qml
-import QtQuick 2.3
+import QtQuick
 
 Item {
     id: root
