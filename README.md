@@ -5,6 +5,8 @@
     + [Scalability](#scalability)
         * [Scalability techniques overview](#scalability-techniques-overview)
         * [Items sizes proportional to default font sizes](#items-sizes-proportional-to-default-font-sizes)
+        * [Text fields font size](#text-fields-font-size)
+        * [Item stretchable to inner text size metrics](#item-stretchable-to-inner-text-size-metrics)
         * [Positioners vs Layouts](#positioners-vs-Layouts)
         * [Load components on demand](#load-components-on-demand)
     + [QML Object Declarations](#qml-object-declarations)
@@ -82,11 +84,11 @@ You need to consider scalability when:
   after your initial deployment.
 
 So since display resolutions improve, a scalable application UI becomes more and 
-more important. While Qt provides only some [general recommendations](https://doc.qt.io/qt-6/scalability.html) good without code examples for this, 
-some of them  are very suboptimal like one of the approaches is to maintain several 
-copies of the UI for different screen resolutions, and load the appropriate one 
-depending on the available resolution. This adds significant development and 
-maintenance overhead.
+more important. While Qt provides only some 
+[general recommendations](https://doc.qt.io/qt-6/scalability.html) 
+without good code examples for them, some of advices are very suboptimal: 
+one of the approaches is to maintain several copies of the UI for different screen resolutions, and load the appropriate one depending on the available resolution. 
+This adds significant development and maintenance overhead.
 
 Considering scalability feature for the UI may significantly impact on the overal 
 application architecture and components design so should be taken into account 
@@ -116,7 +118,25 @@ Item {
     height: AppConstantsSingleton.defaultFontPixelHeight * 20
 }
 ```
-**Example:** Another type of scaling: Item stretchable to inner text width:
+
+### Text fields font size
+Since we rely on font pixel size there, hence for consistency in scalable 
+interfaces in bindings need to use `Text.font.pixelSize` everywhere, which 
+gives us exact predictive Text box height in pixels for sizes supervision, and 
+avoid using conflicting `pointSize` property which gives different pixel sizes 
+dependent according to screen size, DPI, etc. QML always warn if we try to set 
+both in a control.
+
+```qml
+    Text {
+        anchors.centerIn: parent
+        text: "Hello world!"
+        font.pixelSize: AppConstantsSingleton.defaultFontPixelHeight
+    }
+```
+
+### Item stretchable to inner text size metrics
+Another type of scaling example where Item scales to child Text item size:
 
 ```qml
     Rectangle {
@@ -138,6 +158,44 @@ Item {
         }
     }
 ```
+
+### Text fits into an Item
+Of course there could be an opposite situation where need to fit text into
+parent control predefined size. For this purpose 
+[`Text.fontSizeMode` property](https://doc.qt.io/qt-6/qml-qtquick-text.html#fontSizeMode-prop) 
+could be used. This property specifies how the font size of the displayed text 
+is determined. The font size of fitted text has a minimum bound specified by 
+the `minimumPointSize` or `minimumPixelSize` property and maximum bound specified 
+by either the `font.pointSize` or `font.pixelSize` properties.
+
+```qml
+Text { text: "Hello"; fontSizeMode: Text.Fit; minimumPixelSize: 10; font.pixelSize: 72 }
+```
+However this approach has limitation as if the text does not fit within the 
+item bounds with the minimum font size the text will be elided as per the 
+elide property.
+
+Other way is to calculate font size relative to parent item:
+
+```qml
+    Rectangle {
+        anchors.centerIn: parent
+        width: root.width * 0.5
+        height: root.height * 0.5
+        color: 'green'
+
+        Text {
+            id: field
+            anchors.centerIn: parent
+            width: parent.width
+            height: parent.height
+            text: "Size me!"
+            color: 'white'
+            font.pixelSize: field.width / 10 // resize relative to parent
+        }
+    }
+```
+**Note.** And again we specify font size in pixels above (`font.pixelSize`).
 
 ### Positioners vs Layouts
 As long as items should be proportional to the default font size, 
