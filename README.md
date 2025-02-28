@@ -19,6 +19,10 @@
     + [Property Assignments](#property-assignments)
     + [Import Statements](#import-statements)
     + [Full Example](#full-example)
+- [Properties](#properties)
+    + [Use types](#use-types)
+    + [Avoid parent and other generic properties](#avoid-parent-and-other-generic-properties)
+    + [Use qualified property lookup](#use-qualified-property-lookup)
 - [Bindings](#bindings)
     + [Prefer Bindings over Imperative Assignments](#prefer-bindings-over-imperative-assignments)
     + [Making `Connections`](#making-connections)
@@ -56,6 +60,7 @@ sources, best practices and recommendations:
     + [Performance Considerations And Suggestions](https://doc.qt.io/qt-6/qtquick-performance.html)
     + [Scalability](https://doc.qt.io/qt-6/scalability.html)
     + [QML Application Structuring Approaches](https://wiki.qt.io/QML_Application_Structuring_Approaches) (some info is actual, some outdated)
+    + [10 Tips to Make Your QML Code Faster and More Maintainable | KDAB](https://www.kdab.com/10-tips-to-make-your-qml-code-faster-and-more-maintainable/)
   - [QGroundControl Coding Style](https://github.com/mavlink/qgroundcontrol/blob/master/CodingStyle.qml)
 
 This write-up summarizes best practices towards good user experience, 
@@ -766,6 +771,69 @@ Item {
     // Private JavaScript functions or move this to the `privates` object
     function _doSomethingPrivate(x) {   
         ...                             
+    }
+}
+```
+# Properties
+
+##  Use types
+In order for `qmlcachegen` to generate efficient code for your bindings, it needs 
+to know the type for properties. Avoid using `property var` wherever possible 
+and use concrete types. This may be built-in types like `int`, `double`, or 
+`string`, or any declaratively-defined custom type. Sometimes you want to be 
+able to use a type as a property type in QML but don't want the type to be 
+creatable from QML directly. For this, you can register them using the 
+`QML_UNCREATABLE` macro.
+
+```qml
+property var size: 10 // bad
+property int size: 10 // good
+
+property var thing // bad
+property MyThing thing // good
+```
+
+## Avoid parent and other generic properties
+`qmlcachegen` can only work with the property types it knows at compile time. 
+It cannot make any assumptions about which concrete subtype a property will 
+hold at runtime. This means that, if a property is defined with type `Item`, 
+it can only compile bindings using properties defined on `Item`, not any of its 
+subtypes. This is particularly relevant for properties like `parent` or 
+`contentItem`. For this reason, avoid using properties like these to look up 
+items when not using properties defined on `Item` (properties like `width`, 
+`height`, or `visible` are okay) and use look-ups via IDs instead.
+
+```qml
+    Item {
+        id: thing
+
+        property int size: 10
+
+        Rectangle {
+            width: parent.size // bad, Item has no 'size' property
+            height: thing.height // good, lookup via id
+
+            color: parent.enabled ? "red" : "black" // good, Item has 'enabled' property
+        }
+    }
+```
+
+## Use qualified property lookup
+QML allows you to access properties from objects several times up in the parent 
+hierarchy without explicitly specifying which object is being referenced. 
+This is called an unqualified property look-up and generally considered bad 
+practice since it leads to brittle and hard to reason about code. 
+`qmlcachegen` also cannot properly reason about such code. So, it cannot properly 
+compile it. You should only use qualified property lookups:
+
+```qml
+Item {
+    id: root
+    property int size: 10
+
+    Rectangle {
+        width: size // bad, unqualified lookup
+        height: root.size // good, qualified lookup
     }
 }
 ```
