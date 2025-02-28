@@ -7,6 +7,7 @@
         * [Items sizes proportional to default font sizes](#items-sizes-proportional-to-default-font-sizes)
         * [Text fields font size](#text-fields-font-size)
         * [Item stretchable to inner text size metrics](#item-stretchable-to-inner-text-size-metrics)
+        * [Position Elements With Anchors](#position-elements-with-anchors)
         * [Positioners vs Layouts](#positioners-vs-Layouts)
         * [Load components on demand](#load-components-on-demand)
     + [QML Object Declarations](#qml-object-declarations)
@@ -120,6 +121,10 @@ Item {
 ```
 
 ### Text fields font size
+A `Text` QML type attempts to determine how much room is needed and set the 
+width and height properties accordingly, unless they are explicitly set. This 
+fact could be used in developing scalable UI, which will be shown in sections below.
+
 Since we rely on font pixel size there, hence for consistency in scalable 
 interfaces in bindings need to use `Text.font.pixelSize` everywhere, which 
 gives us exact predictive Text box height in pixels for sizes supervision, and 
@@ -196,6 +201,17 @@ Other way is to calculate font size relative to parent item:
     }
 ```
 **Note.** And again we specify font size in pixels above (`font.pixelSize`).
+
+### Position Elements With Anchors
+If the layout is dynamic, the most performant and efficient way to specify 
+the layout is to use anchors rather than bindings to position items 
+relative to each other. Positioning with bindings (by assigning binding 
+expressions to the `x`, `y`, `width` and `height` properties of visual objects, 
+rather than using anchors) is relatively slow, although it allows maximum 
+flexibility.
+
+And vice versa: if the layout is not dynamic, the most performant way to specify 
+the layout is via static initialization of the x, y, width and height properties. 
 
 ### Positioners vs Layouts
 As long as items should be proportional to the default font size, 
