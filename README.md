@@ -19,6 +19,7 @@
     + [Property Assignments](#property-assignments)
     + [Import Statements](#import-statements)
     + [Full Example](#full-example)
+    + [Check for best practice compliance with `qmllint`](#check-for-best-practice-compliance-with-qmllint)
 - [Properties](#properties)
     + [Use types](#use-types)
     + [Required properties](#required-properties)
@@ -776,6 +777,20 @@ Item {
     }
 }
 ```
+
+## Check for best practice compliance with `qmllint`
+[`qmllint`](https://doc.qt.io/qt-6/qtqml-tooling-qmllint.html) 
+is a tool shipped with Qt, that verifies the syntatic validity of QML 
+files. It also warns about some QML anti-patterns. qmllint warns about:
+
+- Unqualified accesses of properties
+- Usage of signal handlers without a matching signal
+- Usage of with statements in QML
+- Issues related to compiling QML code
+- Unused imports
+- Deprecated components and properties
+- And many other things
+
 # Properties
 
 ##  Use types
