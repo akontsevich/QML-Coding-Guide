@@ -10,7 +10,7 @@
         * [Position Elements With Anchors](#position-elements-with-anchors)
         * [Positioners vs Layouts](#positioners-vs-Layouts)
         * [Load components on demand](#load-components-on-demand)
-    + [QML Object Declarations](#qml-object-declarations)
+    + [QML Object Declarations order](#qml-object-declarations-order)
     + [Signal Handler Ordering](#signal-handler-ordering)
     + [Property Initialization Order](#property-initialization-order)
     + [Function Ordering](#function-ordering)
@@ -309,7 +309,7 @@ universalism and some useful side effect like for QML bindings:
     }
 ```
 
-## QML Object Declarations
+## QML Object Declarations order
 This section provides details about how to format the order of properties, signals,
 and functions to make things easy on the eyes and quickly switch to related code block.
 
@@ -811,8 +811,14 @@ property MyThing thing // good
 ```
 
 ## Required properties
-Use **required** properties to avoid undefined behavior errors during runtime. 
-They are especially useful for delegates.
+When requiring data defined outside the component, make this explicit by using 
+[Required Properties](https://doc.qt.io/qt-6/qml-codingconventions.html#required-properties). 
+Required properties must be set or else the creation of the component will fail. 
+These are preferable to unqualified lookups because they are more performant 
+and allow for both users and tooling to reason about an external property's type. 
+Additionally they remove assumptions that a component otherwise has to make 
+about the environment in which it is created, also they allow to avoid undefined 
+behavior errors during runtime. They are especially useful for delegates.
 
 ```qml
 Rectangle {
