@@ -317,7 +317,7 @@ suitable for scalable interfaces as there object properties modifies standart
 and actually defines new item (object) behavior as stretching is one of the main 
 function (primary) of a control in such UI, therefore first look on a control 
 should show how it works. Qt guys also mention 
-[this conventions are wrong and outdated](https://github.com/Furkanzmc/QML-Coding-Guide/issues/4#issue-524411345) 
+[these conventions are wrong and outdated](https://github.com/Furkanzmc/QML-Coding-Guide/issues/4#issue-524411345) 
 and use natural ordering without such breaks in declaration blocks.
 
 
@@ -888,7 +888,7 @@ Item {
 
     Connections {
         // Notice that target is not set so it's implicitly set to root.
-        onWidthChanged: {
+        function onWidthChanged(width) {
             // Do something. But since Item also has a width property we may
             // handle the change for root until the target is set explicitly.
         }
@@ -904,7 +904,7 @@ Item {
 
     Connections {
         target: null // Good. Now we won't have the same problem.
-        onWidthChanged: {
+        function onWidthChanged(width) {
             // Do something. Only handles the changes for the intended target.
         }
     }
@@ -1504,9 +1504,7 @@ ApplicationWindow {
         }
         text: "Emit Last Signal"
         
-        onClicked: {
-            root.myObjects[root.myObjects.length - 1].somethingHappened()
-        }
+        onClicked: root.myObjects[root.myObjects.length - 1].somethingHappened()
     }
 }
 ```
@@ -1533,13 +1531,11 @@ delegate: Button {
 
     readonly property string name: "Button #" + index
 
-    onClicked: {
-        root.myObjects[index].somethingHappened()
-    }
+    onClicked: root.myObjects[index].somethingHappened()
 
     Connections {
         target: root.myObjects[index]
-        onSomethingHappened: {
+        function onSomethingHappened {
             console.log(self.name)
         }
     }
@@ -1562,7 +1558,7 @@ Item {
 
         Connections {
             target: root.myObjects[index]
-            onSomethingHappened: {
+            function onSomethingHappened() {
                 console.log(self.name)
             }
         }
