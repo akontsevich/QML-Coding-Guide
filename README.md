@@ -21,6 +21,7 @@
     + [Full Example](#full-example)
 - [Properties](#properties)
     + [Use types](#use-types)
+    + [Required properties](#required-properties)
     + [Avoid parent and other generic properties](#avoid-parent-and-other-generic-properties)
     + [Use qualified property lookup](#use-qualified-property-lookup)
 - [Bindings](#bindings)
@@ -61,6 +62,7 @@ sources, best practices and recommendations:
     + [Scalability](https://doc.qt.io/qt-6/scalability.html)
     + [QML Application Structuring Approaches](https://wiki.qt.io/QML_Application_Structuring_Approaches) (some info is actual, some outdated)
     + [10 Tips to Make Your QML Code Faster and More Maintainable | KDAB](https://www.kdab.com/10-tips-to-make-your-qml-code-faster-and-more-maintainable/)
+    + [Best Practices in Writing Applications in QML | User Interface | #QtWS21 - YouTube](https://www.youtube.com/watch?v=mImptIBmWW0)
   - [QGroundControl Coding Style](https://github.com/mavlink/qgroundcontrol/blob/master/CodingStyle.qml)
 
 This write-up summarizes best practices towards good user experience, 
@@ -791,6 +793,36 @@ property int size: 10 // good
 
 property var thing // bad
 property MyThing thing // good
+```
+
+## Required properties
+Use **required** properties to avoid undefined behavior errors during runtime. 
+They are especially useful for delegates.
+
+```qml
+Rectangle {
+    id: root
+    required property string fontName
+
+    Text {
+        anchors: centerIn.parent
+        font.family: root.fontName
+        text: root.fontName
+    }
+}
+```
+
+Also it is always better to specify the required property type which guarantees
+that object will exists on compile time and not lost in objects hierarchy 
+tree. In example below, this also secures main window id potentially change 
+if `mainWindow` id is called directly from the button.
+
+```qml
+    Button {
+        required property ApplicationWindow mainWindow
+        text: qsTr("Enter fullscreen")
+        onClicked: mainWindow.showFullScreen()
+    }
 ```
 
 ## Avoid parent and other generic properties
