@@ -1,15 +1,26 @@
-# Table of Contents
+# Introduction
+Coding guide is based on my experience working on big Qt/QML projects, 
+some good examples and common sense first of all, as well as on the following 
+sources, best practices and recommendations:
 
-- [Introduction](#introduction)
+  - Original [Furkanzmc/QML-Coding-Guide](https://github.com/Furkanzmc/QML-Coding-Guide) content
+  - Qt best practices:
+    + [Best Practices for QML and Qt Quick](https://doc.qt.io/qt-6/qtquick-bestpractices.html)
+    + [Performance Considerations And Suggestions](https://doc.qt.io/qt-6/qtquick-performance.html)
+    + [Scalability](https://doc.qt.io/qt-6/scalability.html)
+    + [QML Application Structuring Approaches](https://wiki.qt.io/QML_Application_Structuring_Approaches) (some info is actual, some outdated)
+    + [10 Tips to Make Your QML Code Faster and More Maintainable | KDAB](https://www.kdab.com/10-tips-to-make-your-qml-code-faster-and-more-maintainable/)
+    + [Best Practices in Writing Applications in QML | User Interface | #QtWS21 - YouTube](https://www.youtube.com/watch?v=mImptIBmWW0)
+  - [QGroundControl Coding Style](https://github.com/mavlink/qgroundcontrol/blob/master/CodingStyle.qml)
+
+This write-up summarizes best practices towards good user experience, 
+UI look-and-feel, scalability, performance, much fewer errors, extendability and 
+maintenance. They are to be applied early in the development cycle in order to 
+avoid technical debt and _costly_ refactoring later. Also document includes
+justifications for this or that technical decisions.
+
+# Table of Contents
 - [Code Style](#code-style)
-    + [Scalability](#scalability)
-        * [Scalability techniques overview](#scalability-techniques-overview)
-        * [Items sizes proportional to default font sizes](#items-sizes-proportional-to-default-font-sizes)
-        * [Text fields font size](#text-fields-font-size)
-        * [Item stretchable to inner text size metrics](#item-stretchable-to-inner-text-size-metrics)
-        * [Position Elements With Anchors](#position-elements-with-anchors)
-        * [Positioners vs Layouts](#positioners-vs-Layouts)
-        * [Load components on demand](#load-components-on-demand)
     + [QML Object Declarations order](#qml-object-declarations-order)
     + [Signal Handler Ordering](#signal-handler-ordering)
     + [Property Initialization Order](#property-initialization-order)
@@ -20,6 +31,14 @@
     + [Import Statements](#import-statements)
     + [Full Example](#full-example)
     + [Check for best practice compliance with `qmllint`](#check-for-best-practice-compliance-with-qmllint)
+- [Scalability](#scalability)
+    + [Scalability techniques overview](#scalability-techniques-overview)
+    + [Items sizes proportional to default font sizes](#items-sizes-proportional-to-default-font-sizes)
+    + [Text fields font size](#text-fields-font-size)
+    + [Item stretchable to inner text size metrics](#item-stretchable-to-inner-text-size-metrics)
+    + [Position Elements With Anchors](#position-elements-with-anchors)
+    + [Positioners vs Layouts](#positioners-vs-Layouts)
+    + [Load components on demand](#load-components-on-demand)
 - [Properties](#properties)
     + [Use types](#use-types)
     + [Required properties](#required-properties)
@@ -50,264 +69,8 @@
     + [Distinguish Between Different Types of Sizes](#distinguish-between-different-types-of-sizes)
     + [Be Careful with a Transparent `Rectangle`](#be-careful-with-a-transparent-rectangle)
 
-
-# Introduction
-Coding guide is based on my experience working on big Qt/QML projects, 
-some good examples and common sense first of all, as well as on the following 
-sources, best practices and recommendations:
-
-  - Original [Furkanzmc/QML-Coding-Guide](https://github.com/Furkanzmc/QML-Coding-Guide) content
-  - Qt best practices:
-    + [Best Practices for QML and Qt Quick](https://doc.qt.io/qt-6/qtquick-bestpractices.html)
-    + [Performance Considerations And Suggestions](https://doc.qt.io/qt-6/qtquick-performance.html)
-    + [Scalability](https://doc.qt.io/qt-6/scalability.html)
-    + [QML Application Structuring Approaches](https://wiki.qt.io/QML_Application_Structuring_Approaches) (some info is actual, some outdated)
-    + [10 Tips to Make Your QML Code Faster and More Maintainable | KDAB](https://www.kdab.com/10-tips-to-make-your-qml-code-faster-and-more-maintainable/)
-    + [Best Practices in Writing Applications in QML | User Interface | #QtWS21 - YouTube](https://www.youtube.com/watch?v=mImptIBmWW0)
-  - [QGroundControl Coding Style](https://github.com/mavlink/qgroundcontrol/blob/master/CodingStyle.qml)
-
-This write-up summarizes best practices towards good user experience, 
-UI look-and-feel, scalability, performance, much fewer errors, extendability and 
-maintenance. They are to be applied early in the development cycle in order to 
-avoid technical debt and _costly_ refactoring later. Also document includes
-justifications for this or that technical decisions.
-
-# Code Style
-
-## Scalability
-
-### Scalability techniques overview
-When we develop applications for several different mobile device platforms, 
-we may face the following challenges:
-
-  - Mobile device platforms support devices with varying screen configurations: 
-    size, aspect ratio, orientation, and density.
-  - Different platforms have different UI conventions and you need to meet the 
-    users' expectations on each platform.
     
-You need to consider scalability when:
-
-  - You want to deploy your application to more than one device platform, 
-  such as Android and iOS, or more than one device screen configuration.
-  - Your want to be prepared for new devices that might appear on the market 
-  after your initial deployment.
-
-So since display resolutions improve, a scalable application UI becomes more and 
-more important. While Qt provides only some 
-[general recommendations](https://doc.qt.io/qt-6/scalability.html) 
-without good code examples for them, some of advices are very suboptimal: 
-one of the approaches is to maintain several copies of the UI for different screen resolutions, and load the appropriate one depending on the available resolution. 
-This adds significant development and maintenance overhead.
-
-Considering scalability feature for the UI may significantly impact on the overal 
-application architecture and components design so should be taken into account 
-on very early development stage to avoid further technical debt and refactoring.
-
-There is no unique, universal or the best aprroach organizing scalability while 
-Qt Quick allows to develop applications that can run on different types of devices, 
-screen sizes, aspect ratio, orientation, DPI, etc. Application can cope with 
-different screen configurations. However, there is always a certain amount 
-of fixing and polishing needed to create an optimal user experience for each 
-target platform.
-
-[Good scalable UI organization example](https://github.com/mavlink/qgroundcontrol/blob/master/CodingStyle.qml) provided by QGroundControl - 
-Cross-platform ground control station for drones (Android, iOS, Mac OS, Linux, 
-Windows). There are a lot of [QML controls](https://github.com/mavlink/qgroundcontrol/blob/master/src/QmlControls/) to learn scalability and positioning from.
-
-### Items sizes proportional to default font sizes
-So for the above type of scalability organization, items sizes and 
-layouts/positioners spacing should be proportional to default font sizes. 
-Example:
-
-```qml
-Item {
-    // Property binding to item properties
-    width:  AppConstantsSingleton.defaultFontPixelHeight * 10 
-    // No hardcoded sizing. All sizing must be relative to default font size
-    height: AppConstantsSingleton.defaultFontPixelHeight * 20
-}
-```
-
-### Text fields font size
-A `Text` QML type attempts to determine how much room is needed and set the 
-width and height properties accordingly, unless they are explicitly set. This 
-fact could be used in developing scalable UI, which will be shown in sections below.
-
-Since we rely on font pixel size there, hence for consistency in scalable 
-interfaces in bindings need to use `Text.font.pixelSize` everywhere, which 
-gives us exact predictive Text box height in pixels for sizes supervision, and 
-avoid using conflicting `pointSize` property which gives different pixel sizes 
-dependent according to screen size, DPI, etc. QML always warn if we try to set 
-both in a control.
-
-```qml
-    Text {
-        anchors.centerIn: parent
-        text: "Hello world!"
-        font.pixelSize: AppConstantsSingleton.defaultFontPixelHeight
-    }
-```
-
-### Item stretchable to inner text size metrics
-Another type of scaling example where Item scales to child Text item size:
-
-```qml
-    Rectangle {
-        color:  "green"
-        width:  t_metrics.tightBoundingRect.width
-        height: t_metrics.tightBoundingRect.height
-
-        Text {
-            id:     a_text
-            text:   "r"
-            color:  "white"
-            anchors.centerIn: parent
-        }
-
-        TextMetrics {
-            id:     t_metrics
-            font:   a_text.font
-            text:   a_text.text
-        }
-    }
-```
-
-### Text fits into an Item
-Of course there could be an opposite situation where need to fit text into
-parent control predefined size. For this purpose 
-[`Text.fontSizeMode` property](https://doc.qt.io/qt-6/qml-qtquick-text.html#fontSizeMode-prop) 
-could be used. This property specifies how the font size of the displayed text 
-is determined. The font size of fitted text has a minimum bound specified by 
-the `minimumPointSize` or `minimumPixelSize` property and maximum bound specified 
-by either the `font.pointSize` or `font.pixelSize` properties.
-
-```qml
-Text { text: "Hello"; fontSizeMode: Text.Fit; minimumPixelSize: 10; font.pixelSize: 72 }
-```
-However this approach has limitation as if the text does not fit within the 
-item bounds with the minimum font size the text will be elided as per the 
-elide property.
-
-Other way is to calculate font size relative to parent item:
-
-```qml
-    Rectangle {
-        anchors.centerIn: parent
-        width: root.width * 0.5
-        height: root.height * 0.5
-        color: 'green'
-
-        Text {
-            id: field
-            anchors.centerIn: parent
-            width: parent.width
-            height: parent.height
-            text: "Size me!"
-            color: 'white'
-            font.pixelSize: field.width / 10 // resize relative to parent
-        }
-    }
-```
-**Note.** And again we specify font size in pixels above (`font.pixelSize`).
-
-### Position Elements With Anchors
-If the layout is dynamic, the most performant and efficient way to specify 
-the layout is to use anchors rather than bindings to position items 
-relative to each other. Positioning with bindings (by assigning binding 
-expressions to the `x`, `y`, `width` and `height` properties of visual objects, 
-rather than using anchors) is relatively slow, although it allows maximum 
-flexibility.
-
-And vice versa: if the layout is not dynamic, the most performant way to specify 
-the layout is via static initialization of the x, y, width and height properties. 
-
-### Positioners vs Layouts
-As long as items should be proportional to the default font size, 
-[Positioner](https://doc.qt.io/qt-6/qml-qtquick-positioner.html)s 
-([Row](https://doc.qt.io/qt-6/qml-qtquick-row.html), 
-[Column](https://doc.qt.io/qt-6/qml-qtquick-column.html), 
-[Grid](https://doc.qt.io/qt-6/qml-qtquick-grid.html), 
-[Flow](https://doc.qt.io/qt-6/qml-qtquick-flow.html)) 
-considered preferable comparing to layouts as positioners manage only items 
-position &ndash; not their size. Positioners stretch their size according to 
-content items, which is suitable, for example, for dynamic scrollable pages, 
-lists, etc where we do not know parent size before hand and want parent size 
-rises according to content and do not want items to be resizeable as they 
-already scales according to font sizes.
-
-**Example**. Stretchable 2x2 Grid which prints map parameters titles and their values
-
-```qml
-    Grid {
-        columns: 2
-        columnSpacing: ScreenTools.defaultFontPixelHeight * 2
-
-        Label {
-            text: qsTr("Tile Count:")
-            font.pixelSize: ScreenTools.smallFontPixelHeight
-        }
-        Label {
-            text: QGroundControl.mapEngineManager.tileCountStr
-            font.pixelSize: ScreenTools.smallFontPixelHeight
-            color: _tooManyTiles ? "red" : qgcPal.text
-        }
-
-        Label {
-            text: qsTr("Size (est.):")
-            font.pixelSize: ScreenTools.smallFontPixelHeight
-        }
-        Label {
-            text: QGroundControl.mapEngineManager.tileSizeStr
-            font.pixelSize: ScreenTools.smallFontPixelHeight
-            color: _tooManyTiles ? "red" : qgcPal.text
-        }
-    }
-```
-
-### Load components on demand
-To implement scalable applications using Qt Quick load components on demand by 
-using a `Loader` is suggested as well. This also provides code reusing and 
-universalism and some useful side effect like for QML bindings:
-
-  - few times(!!!) less coding: single `Loader` used for many Items (pages), 
-    pages could be loaded via a model.
-  - much simpler logic
-  - automatic destroying/hiding of dependent objects/items
-  - etc.
-  
-**Example**. Loader with model
-```qml
-    ListView {
-        id: settingsPager
-        anchors {
-            top: parent.top;
-            bottom: parent.bottom
-            horizontalCenter: parent.horizontalCenter;
-            topMargin: ScreenTools.defaultFontPixelHeight
-        }
-        width: parent.width * 0.9
-        spacing: ScreenTools.defaultFontPixelHeight * 2
-        clip: true
-        indicatorEnabled: false
-
-        model: ["qrc:/qml/Controls/UnitsSettings.qml",
-                "qrc:/qml/Controls/MissionParameters.qml",
-                "qrc:/qml/Controls/GeneralSettings.qml"]
-
-        delegate: Item {
-            id: element
-            width: settingsPager.width
-            height: sectionsLoader.height
-
-            Loader {
-                id: sectionsLoader
-                anchors.top: parent.top;
-                width: parent.width
-                source: modelData
-            }
-        }
-    }
-```
+# Code Style
 
 ## QML Object Declarations order
 This section provides details about how to format the order of properties, signals,
@@ -790,6 +553,241 @@ files. It also warns about some QML anti-patterns. qmllint warns about:
 - Unused imports
 - Deprecated components and properties
 - And many other things
+
+# Scalability
+
+## Scalability techniques overview
+When we develop applications for several different mobile device platforms, 
+we may face the following challenges:
+
+  - Mobile device platforms support devices with varying screen configurations: 
+    size, aspect ratio, orientation, and density.
+  - Different platforms have different UI conventions and you need to meet the 
+    users' expectations on each platform.
+    
+You need to consider scalability when:
+
+  - You want to deploy your application to more than one device platform, 
+  such as Android and iOS, or more than one device screen configuration.
+  - Your want to be prepared for new devices that might appear on the market 
+  after your initial deployment.
+
+So since display resolutions improve, a scalable application UI becomes more and 
+more important. While Qt provides only some 
+[general recommendations](https://doc.qt.io/qt-6/scalability.html) 
+without good code examples for them, some of advices are very suboptimal: 
+one of the approaches is to maintain several copies of the UI for different screen resolutions, and load the appropriate one depending on the available resolution. 
+This adds significant development and maintenance overhead.
+
+Considering scalability feature for the UI may significantly impact on the overal 
+application architecture and components design so should be taken into account 
+on very early development stage to avoid further technical debt and refactoring.
+
+There is no unique, universal or the best aprroach organizing scalability while 
+Qt Quick allows to develop applications that can run on different types of devices, 
+screen sizes, aspect ratio, orientation, DPI, etc. Application can cope with 
+different screen configurations. However, there is always a certain amount 
+of fixing and polishing needed to create an optimal user experience for each 
+target platform.
+
+[Good scalable UI organization example](https://github.com/mavlink/qgroundcontrol/blob/master/CodingStyle.qml) provided by QGroundControl - 
+Cross-platform ground control station for drones (Android, iOS, Mac OS, Linux, 
+Windows). There are a lot of [QML controls](https://github.com/mavlink/qgroundcontrol/blob/master/src/QmlControls/) to learn scalability and positioning from.
+
+## Items sizes proportional to default font sizes
+So for the above type of scalability organization, items sizes and 
+layouts/positioners spacing should be proportional to default font sizes. 
+Example:
+
+```qml
+Item {
+    // Property binding to item properties
+    width:  AppConstantsSingleton.defaultFontPixelHeight * 10 
+    // No hardcoded sizing. All sizing must be relative to default font size
+    height: AppConstantsSingleton.defaultFontPixelHeight * 20
+}
+```
+
+## Text fields font size
+A `Text` QML type attempts to determine how much room is needed and set the 
+width and height properties accordingly, unless they are explicitly set. This 
+fact could be used in developing scalable UI, which will be shown in sections below.
+
+Since we rely on font pixel size there, hence for consistency in scalable 
+interfaces in bindings need to use `Text.font.pixelSize` everywhere, which 
+gives us exact predictive Text box height in pixels for sizes supervision, and 
+avoid using conflicting `pointSize` property which gives different pixel sizes 
+dependent according to screen size, DPI, etc. QML always warn if we try to set 
+both in a control.
+
+```qml
+    Text {
+        anchors.centerIn: parent
+        text: "Hello world!"
+        font.pixelSize: AppConstantsSingleton.defaultFontPixelHeight
+    }
+```
+
+## Item stretchable to inner text size metrics
+Another type of scaling example where Item scales to child Text item size:
+
+```qml
+    Rectangle {
+        color:  "green"
+        width:  t_metrics.tightBoundingRect.width
+        height: t_metrics.tightBoundingRect.height
+
+        Text {
+            id:     a_text
+            text:   "r"
+            color:  "white"
+            anchors.centerIn: parent
+        }
+
+        TextMetrics {
+            id:     t_metrics
+            font:   a_text.font
+            text:   a_text.text
+        }
+    }
+```
+
+## Text fits into an Item
+Of course there could be an opposite situation where need to fit text into
+parent control predefined size. For this purpose 
+[`Text.fontSizeMode` property](https://doc.qt.io/qt-6/qml-qtquick-text.html#fontSizeMode-prop) 
+could be used. This property specifies how the font size of the displayed text 
+is determined. The font size of fitted text has a minimum bound specified by 
+the `minimumPointSize` or `minimumPixelSize` property and maximum bound specified 
+by either the `font.pointSize` or `font.pixelSize` properties.
+
+```qml
+Text { text: "Hello"; fontSizeMode: Text.Fit; minimumPixelSize: 10; font.pixelSize: 72 }
+```
+However this approach has limitation as if the text does not fit within the 
+item bounds with the minimum font size the text will be elided as per the 
+elide property.
+
+Other way is to calculate font size relative to parent item:
+
+```qml
+    Rectangle {
+        anchors.centerIn: parent
+        width: root.width * 0.5
+        height: root.height * 0.5
+        color: 'green'
+
+        Text {
+            id: field
+            anchors.centerIn: parent
+            width: parent.width
+            height: parent.height
+            text: "Size me!"
+            color: 'white'
+            font.pixelSize: field.width / 10 // resize relative to parent
+        }
+    }
+```
+**Note.** And again we specify font size in pixels above (`font.pixelSize`).
+
+## Position Elements With Anchors
+If the layout is dynamic, the most performant and efficient way to specify 
+the layout is to use anchors rather than bindings to position items 
+relative to each other. Positioning with bindings (by assigning binding 
+expressions to the `x`, `y`, `width` and `height` properties of visual objects, 
+rather than using anchors) is relatively slow, although it allows maximum 
+flexibility.
+
+And vice versa: if the layout is not dynamic, the most performant way to specify 
+the layout is via static initialization of the x, y, width and height properties. 
+
+## Positioners vs Layouts
+As long as items should be proportional to the default font size, 
+[Positioner](https://doc.qt.io/qt-6/qml-qtquick-positioner.html)s 
+([Row](https://doc.qt.io/qt-6/qml-qtquick-row.html), 
+[Column](https://doc.qt.io/qt-6/qml-qtquick-column.html), 
+[Grid](https://doc.qt.io/qt-6/qml-qtquick-grid.html), 
+[Flow](https://doc.qt.io/qt-6/qml-qtquick-flow.html)) 
+considered preferable comparing to layouts as positioners manage only items 
+position &ndash; not their size. Positioners stretch their size according to 
+content items, which is suitable, for example, for dynamic scrollable pages, 
+lists, etc where we do not know parent size before hand and want parent size 
+rises according to content and do not want items to be resizeable as they 
+already scales according to font sizes.
+
+**Example**. Stretchable 2x2 Grid which prints map parameters titles and their values
+
+```qml
+    Grid {
+        columns: 2
+        columnSpacing: ScreenTools.defaultFontPixelHeight * 2
+
+        Label {
+            text: qsTr("Tile Count:")
+            font.pixelSize: ScreenTools.smallFontPixelHeight
+        }
+        Label {
+            text: QGroundControl.mapEngineManager.tileCountStr
+            font.pixelSize: ScreenTools.smallFontPixelHeight
+            color: _tooManyTiles ? "red" : qgcPal.text
+        }
+
+        Label {
+            text: qsTr("Size (est.):")
+            font.pixelSize: ScreenTools.smallFontPixelHeight
+        }
+        Label {
+            text: QGroundControl.mapEngineManager.tileSizeStr
+            font.pixelSize: ScreenTools.smallFontPixelHeight
+            color: _tooManyTiles ? "red" : qgcPal.text
+        }
+    }
+```
+
+## Load components on demand
+To implement scalable applications using Qt Quick load components on demand by 
+using a `Loader` is suggested as well. This also provides code reusing and 
+universalism and some useful side effect like for QML bindings:
+
+  - few times(!!!) less coding: single `Loader` used for many Items (pages), 
+    pages could be loaded via a model.
+  - much simpler logic
+  - automatic destroying/hiding of dependent objects/items
+  - etc.
+  
+**Example**. Loader with model
+```qml
+    ListView {
+        id: settingsPager
+        anchors {
+            top: parent.top;
+            bottom: parent.bottom
+            horizontalCenter: parent.horizontalCenter;
+            topMargin: ScreenTools.defaultFontPixelHeight
+        }
+        width: parent.width * 0.9
+        spacing: ScreenTools.defaultFontPixelHeight * 2
+        clip: true
+        indicatorEnabled: false
+
+        model: ["qrc:/qml/Controls/UnitsSettings.qml",
+                "qrc:/qml/Controls/MissionParameters.qml",
+                "qrc:/qml/Controls/GeneralSettings.qml"]
+
+        delegate: Item {
+            id: element
+            width: settingsPager.width
+            height: sectionsLoader.height
+
+            Loader {
+                id: sectionsLoader
+                anchors.top: parent.top;
+                width: parent.width
+                source: modelData
+            }
+        }
+    }
+```
 
 # Properties
 
