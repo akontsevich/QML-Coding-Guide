@@ -70,6 +70,8 @@ justifications for this or that technical decisions.
     + [Don't Define Top Level States](#dont-define-top-level-states)
 - [Visual Items](#visual-items)
     + [Distinguish Between Different Types of Sizes](#distinguish-between-different-types-of-sizes)
+        * [Explicit Size](#explicit-size)
+        * [Implicit Size](#implicit-size)
     + [Be Careful with a Transparent `Rectangle`](#be-careful-with-a-transparent-rectangle)
 
     
@@ -760,7 +762,7 @@ user interfaces to, for example:
  - specify preferred (implicit) item size
 
 Good Layouts usage example could be found here: 
-[ColumnLayout sizing policy and TableView maximum height limitation](https://forum.qt.io/post/824871)
+[ColumnLayout sizing policy and TableView maximum height limitation](https://forum.qt.io/post/824871).
 It also demonstrates implicit size usage in stretchable or resize-to-fit items
 (see the section below 👇).
 
@@ -771,7 +773,7 @@ allows to avoid binding loops in complex resizable UI logic, which could easily
 appear with explicit sizes binding logic. 
 
 More details about this feature could be found in the 
-[Implicit Size](#explicit-size) section.
+[Implicit Size](#implicit-size) section.
 
 ## Load components on demand
 To implement scalable applications using Qt Quick load components on demand by 
