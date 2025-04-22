@@ -37,7 +37,10 @@ justifications for this or that technical decisions.
     + [Text fields font size](#text-fields-font-size)
     + [Item stretchable to inner text size metrics](#item-stretchable-to-inner-text-size-metrics)
     + [Position Elements With Anchors](#position-elements-with-anchors)
-    + [Positioners vs Layouts](#positioners-vs-Layouts)
+    + [Positioners vs Layouts](#positioners-vs-layouts)
+        * [Use positioners to stretch component size according to content items](#use-positioners-to-stretch-component-size-according-to-content-items)
+        * [Use Layouts to stretch content items to parent component size](#use-layouts-to-stretch-content-items-to-parent-component-size)
+        * [Use Implicit Size for resize-to-fit](#use-implicit-size-for-resize-to-fit)
     + [Load components on demand](#load-components-on-demand)
 - [Properties](#properties)
     + [Use types](#use-types)
@@ -702,18 +705,20 @@ And vice versa: if the layout is not dynamic, the most performant way to specify
 the layout is via static initialization of the x, y, width and height properties. 
 
 ## Positioners vs Layouts
+
+### Use positioners to stretch component size according to content items
 As long as items should be proportional to the default font size, 
 [Positioner](https://doc.qt.io/qt-6/qml-qtquick-positioner.html)s 
 ([Row](https://doc.qt.io/qt-6/qml-qtquick-row.html), 
 [Column](https://doc.qt.io/qt-6/qml-qtquick-column.html), 
 [Grid](https://doc.qt.io/qt-6/qml-qtquick-grid.html), 
 [Flow](https://doc.qt.io/qt-6/qml-qtquick-flow.html)) 
-considered preferable comparing to layouts as positioners manage only items 
-position &ndash; not their size. Positioners stretch their size according to 
-content items, which is suitable, for example, for dynamic scrollable pages, 
-lists, etc where we do not know parent size before hand and want parent size 
-rises according to content and do not want items to be resizeable as they 
-already scales according to font sizes.
+considered preferable comparing to layouts for the above purpose as positioners 
+manage only items position &ndash; not their size. Positioners stretch their 
+size according to content items, which is suitable, for example, for dynamic 
+scrollable pages, lists, buttons, toolboxes, etc where we do not know parent 
+size before hand and want parent size rises according to content and do not 
+want items to be resizeable as they already scales according to font sizes.
 
 **Example**. Stretchable 2x2 Grid which prints map parameters titles and their values
 
@@ -743,6 +748,30 @@ already scales according to font sizes.
         }
     }
 ```
+
+### Use Layouts to stretch content items to parent component size
+[Qt Quick Layouts](https://doc.qt.io/qt-6/qtquicklayouts-overview.html) could be 
+used to arrange items in parent component or fit item size to a user interface 
+size constraints or resize the items. That makes them well suited for resizable 
+user interfaces to, for example:
+ - connect windows and layouts
+ - span and stretch Items
+ - implement size constraints
+ - specify preferred (implicit) item size
+
+Good Layouts usage example could be found here: 
+[ColumnLayout sizing policy and TableView maximum height limitation](https://forum.qt.io/post/824871)
+It also demonstrates implicit size usage in stretchable or resize-to-fit items
+(see the section below 👇).
+
+### Use Implicit Size for resize-to-fit
+Implicit size is very useful if you want to implement the above resize-to-fit 
+feature, to let Qt decide what is the final element size should be. It also 
+allows to avoid binding loops in complex resizable UI logic, which could easily 
+appear with explicit sizes binding logic. 
+
+More details about this feature could be found in the 
+[Implicit Size](#explicit-size) section.
 
 ## Load components on demand
 To implement scalable applications using Qt Quick load components on demand by 
