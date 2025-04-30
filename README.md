@@ -1783,7 +1783,7 @@ Let's compare the arrow function version with the old way.
 Item {
     property int value: -1
 
-    Component.onCompelted: {
+    Component.onCompleted: {
         // Arrow function
         root.value = Qt.binding(() => root.someOtherValue)
         // The old way.
