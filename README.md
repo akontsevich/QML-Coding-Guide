@@ -99,7 +99,7 @@ should be structured in the following order:
 - properties:
     + object property initializations without a gap with `id`
     + custom object properties and property aliases that define our interface.
-    + private properties with undercored names if necessary
+    + private properties with underscored names if necessary
     + attached properties 
 - Signal declarations
 - Signal handlers
@@ -548,7 +548,7 @@ Item {
 
 ## Check for best practice compliance with `qmllint`
 [`qmllint`](https://doc.qt.io/qt-6/qtqml-tooling-qmllint.html) 
-is a tool shipped with Qt, that verifies the syntatic validity of QML 
+is a tool shipped with Qt, that verifies the syntactic validity of QML 
 files. It also warns about some QML anti-patterns. qmllint warns about:
 
 - Unqualified accesses of properties
@@ -576,19 +576,24 @@ You need to consider scalability when:
   such as Android and iOS, or more than one device screen configuration.
   - Your want to be prepared for new devices that might appear on the market 
   after your initial deployment.
+  - You or user may want to improve accessibility and change application font 
+  size or translate UI to different language(s) which will break fixed UI layout 
+  as text won't fit into controls any more in this case.
 
-So since display resolutions improve, a scalable application UI becomes more and 
+So since display resolutions improve, application accessibility or its 
+international usage area evolves, a scalable application UI becomes more and 
 more important. While Qt provides only some 
 [general recommendations](https://doc.qt.io/qt-6/scalability.html) 
 without good code examples for them, some of advices are very suboptimal: 
-one of the approaches is to maintain several copies of the UI for different screen resolutions, and load the appropriate one depending on the available resolution. 
-This adds significant development and maintenance overhead.
+one of the approaches is to maintain several copies of the UI for different 
+screen resolutions, and load the appropriate one depending on the available 
+resolution. This adds significant development and maintenance overhead.
 
-Considering scalability feature for the UI may significantly impact on the overal 
+Considering scalability feature for the UI may significantly impact on the overall
 application architecture and components design so should be taken into account 
 on very early development stage to avoid further technical debt and refactoring.
 
-There is no unique, universal or the best aprroach organizing scalability while 
+There is no unique, universal or the best approach organizing scalability while 
 Qt Quick allows to develop applications that can run on different types of devices, 
 screen sizes, aspect ratio, orientation, DPI, etc. Application can cope with 
 different screen configurations. However, there is always a certain amount 
@@ -1228,7 +1233,7 @@ Row {
 }
 ```
 
-This version allows you to de-couple from the singleton, enable it to be resuable in any context
+This version allows you to de-couple from the singleton, enable it to be reusable in any context
 that wants to show a selected color, and you could easily run this through `qmlscene` and inspect
 its behavior.
 
