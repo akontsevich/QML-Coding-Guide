@@ -42,6 +42,7 @@ justifications for this or that technical decisions.
         * [Use Layouts to stretch content items to parent component size](#use-layouts-to-stretch-content-items-to-parent-component-size)
         * [Use Implicit Size for resize-to-fit](#use-implicit-size-for-resize-to-fit)
     + [Load components on demand](#load-components-on-demand)
+    + [Scalability solution for fixed UI resolution](#scalability-solution-for-fixed-ui-resolution)
 - [Properties](#properties)
     + [Use types](#use-types)
     + [Required properties](#required-properties)
@@ -824,6 +825,44 @@ universalism and some useful side effect like for QML bindings:
         }
     }
 ```
+
+## Scalability solution for fixed UI resolution
+What to do if your application design which was not considered scalable 
+beforehand and you already have tons of hard-sized objects, and don't have 
+the time to change everything to use scalability techniques (which won't take 
+too much time in case you have the habbit to do it right way). There is a simple 
+solution in case the target screen sizes have the same aspect ratio as in the 
+original design. You can solve this via 
+[**Scale**](https://doc.qt.io/qt-6/qml-qtquick-scale.html) and 
+[**Screen**](https://doc.qt.io/qt-6/qml-qtquick-screen.html) QML types added to 
+the root (main) `Item`:
+
+```
+import QtQuick
+
+Item {
+    id: root;
+    width: 1280;
+    height: 800;
+
+    // Resize the UI to fit alternative 16:10 ratio screen resolutions
+    transform: Scale {
+        xScale: Screen.width / root.width
+        yScale: Screen.height / root.height
+    }
+    ...
+}
+
+```
+Another option is to use [`scale`](https://doc.qt.io/qt-6/qml-qtquick-item.html#scale-prop) 
+property of the `Item` component. There will no additional performance drawbacks 
+as it simply adds another size scaling calculation to the state machine which 
+happens before any rendering.
+
+Of course, if necessary, this problem could also be solved either on the
+[C++ side](https://stackoverflow.com/a/55408574/630169) or via the
+`QT_SCALE_FACTOR` environment variable as well.
+
 
 # Properties
 
