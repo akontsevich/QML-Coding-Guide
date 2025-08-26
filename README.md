@@ -574,7 +574,11 @@ we may face the following challenges:
 You need to consider scalability when:
 
   - You want to deploy your application to more than one device platform, 
-  such as Android and iOS, or more than one device screen configuration.
+  such as Android and iOS, or more than one device screen configuration. For 
+  example, starting with Android 16, apps can no longer lock themselves to 
+  portrait-only mode. Google is moving the ecosystem toward fully adaptive 
+  apps—designed to work seamlessly across every device, screen size, and 
+  orientation.
   - Your want to be prepared for new devices that might appear on the market 
   after your initial deployment.
   - You or user may want to improve accessibility and change application font 
@@ -583,7 +587,13 @@ You need to consider scalability when:
 
 So since display resolutions improve, application accessibility or its 
 international usage area evolves, a scalable application UI becomes more and 
-more important. While Qt provides only some 
+more important. It’s a fundamental shift in how we design and think about UI/UX. 
+While it may feel challenging, it also pushes us to build experiences that truly 
+scale everywhere: from a phone in your pocket to a desktop-sized display. 
+The era of orientation-locked and fixed-size apps is ending. The era of adaptive 
+design is beginning.
+
+While Qt provides only some 
 [general recommendations](https://doc.qt.io/qt-6/scalability.html) 
 without good code examples for them, some of advices are very suboptimal: 
 one of the approaches is to maintain several copies of the UI for different 
