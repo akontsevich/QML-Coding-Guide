@@ -11,7 +11,7 @@ sources, best practices and recommendations:
     + [QML Application Structuring Approaches](https://wiki.qt.io/QML_Application_Structuring_Approaches) (some info is actual, some outdated)
     + [10 Tips to Make Your QML Code Faster and More Maintainable | KDAB](https://www.kdab.com/10-tips-to-make-your-qml-code-faster-and-more-maintainable/)
     + [Best Practices in Writing Applications in QML | User Interface | #QtWS21 - YouTube](https://www.youtube.com/watch?v=mImptIBmWW0)
-  - [QGroundControl Coding Style](https://github.com/mavlink/qgroundcontrol/blob/master/CodingStyle.qml)
+  - [QGroundControl Coding Style](https://github.com/mavlink/qgroundcontrol/blob/master/CODING_STYLE.md#qml-style)
 
 This write-up summarizes best practices towards good user experience, 
 UI look-and-feel, scalability, performance, much fewer errors, extendability and 
@@ -611,7 +611,7 @@ different screen configurations. However, there is always a certain amount
 of fixing and polishing needed to create an optimal user experience for each 
 target platform.
 
-[Good scalable UI organization example](https://github.com/mavlink/qgroundcontrol/blob/master/CodingStyle.qml) provided by QGroundControl - 
+[Good scalable UI organization example](https://github.com/mavlink/qgroundcontrol/blob/master/CODING_STYLE.md#qml-style) provided by QGroundControl - 
 Cross-platform ground control station for drones (Android, iOS, Mac OS, Linux, 
 Windows). There are a lot of [QML controls](https://github.com/mavlink/qgroundcontrol/blob/master/src/QmlControls/) to learn scalability and positioning from.
 
